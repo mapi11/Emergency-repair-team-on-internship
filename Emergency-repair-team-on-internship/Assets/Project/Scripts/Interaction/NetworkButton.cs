@@ -56,17 +56,21 @@ public class NetworkButton : Interactable
 
     public override void OnNetworkSpawn()
     {
+        base.OnNetworkSpawn();
+
         networkIsPressed.OnValueChanged += OnPressedStateChanged;
 
         visualPressed = networkIsPressed.Value;
         ApplyVisualInstant();
 
-        Debug.Log($"🔘 NetworkButton spawned: {name}, IsServer={IsServer}, IsClient={IsClient}, IsSpawned={IsSpawned}");
+        Debug.Log($"🔘 NetworkButton spawned: {name}");
     }
 
     public override void OnNetworkDespawn()
     {
         networkIsPressed.OnValueChanged -= OnPressedStateChanged;
+
+        base.OnNetworkDespawn();
     }
 
     private void Update()
@@ -74,41 +78,8 @@ public class NetworkButton : Interactable
         UpdateVisual();
     }
 
-    public override void OnHandBegin(PlayerController player)
+    protected override void OnServerInteractionBegin(ulong clientId)
     {
-        Debug.Log($"🔘 NetworkButton {name}: OnHandBegin from {player.name}");
-
-        if (!IsSpawned)
-        {
-            Debug.LogWarning($"⚠ NetworkButton {name}: object is not spawned. Check NetworkObject / Scene Management.");
-            visualPressed = true;
-            return;
-        }
-
-        RequestPressServerRpc();
-    }
-
-    public override void OnHandEnd(PlayerController player)
-    {
-        if (!resetOnRelease)
-            return;
-
-        Debug.Log($"🔘 NetworkButton {name}: OnHandEnd from {player.name}");
-
-        if (!IsSpawned)
-        {
-            visualPressed = false;
-            return;
-        }
-
-        RequestReleaseServerRpc();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestPressServerRpc(ServerRpcParams rpcParams = default)
-    {
-        Debug.Log($"🔘 NetworkButton {name}: PRESS RPC received on server from ClientId={rpcParams.Receive.SenderClientId}");
-
         if (networkIsPressed.Value)
             return;
 
@@ -116,13 +87,13 @@ public class NetworkButton : Interactable
 
         onPressed?.Invoke();
 
-        Debug.Log($"✅ NetworkButton {name}: pressed on server");
+        Debug.Log($"✅ NetworkButton {name}: pressed by Client {clientId}");
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    private void RequestReleaseServerRpc(ServerRpcParams rpcParams = default)
+    protected override void OnServerInteractionEnd(ulong clientId)
     {
-        Debug.Log($"🔘 NetworkButton {name}: RELEASE RPC received on server from ClientId={rpcParams.Receive.SenderClientId}");
+        if (!resetOnRelease)
+            return;
 
         if (!networkIsPressed.Value)
             return;
@@ -131,14 +102,29 @@ public class NetworkButton : Interactable
 
         onReleased?.Invoke();
 
-        Debug.Log($"✅ NetworkButton {name}: released on server");
+        Debug.Log($"✅ NetworkButton {name}: released by Client {clientId}");
+    }
+
+    protected override void OnLocalInteractionBegin(PlayerController player)
+    {
+        visualPressed = true;
+        onPressed?.Invoke();
+    }
+
+    protected override void OnLocalInteractionEnd(PlayerController player)
+    {
+        if (!resetOnRelease)
+            return;
+
+        visualPressed = false;
+        onReleased?.Invoke();
     }
 
     private void OnPressedStateChanged(bool oldValue, bool newValue)
     {
         visualPressed = newValue;
 
-        Debug.Log($"🔁 NetworkButton {name}: synced pressed state {oldValue} -> {newValue}");
+        Debug.Log($"🔁 NetworkButton {name}: pressed state {oldValue} -> {newValue}");
     }
 
     private void UpdateVisual()

@@ -8,6 +8,9 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
     [SerializeField] private string address = "127.0.0.1";
     [SerializeField] private ushort port = 7777;
 
+    [Header("Player")]
+    [SerializeField] private string playerName = "Player";
+
     private UnityTransport transport;
 
     private void Awake()
@@ -40,10 +43,15 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
             GUILayout.Label("Port:");
             string portText = GUILayout.TextField(port.ToString());
 
+            GUILayout.Label("Player Name:");
+            playerName = GUILayout.TextField(playerName, 20);
+
             if (ushort.TryParse(portText, out ushort parsedPort))
             {
                 port = parsedPort;
             }
+
+
 
             GUILayout.Space(10);
 
@@ -94,6 +102,18 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
         GUILayout.EndArea();
     }
 
+    private void ApplyPlayerName()
+    {
+        string trimmedName = playerName.Trim();
+
+        if (string.IsNullOrWhiteSpace(trimmedName))
+        {
+            trimmedName = "Player";
+        }
+
+        LocalPlayerSettings.PlayerName = trimmedName;
+    }
+
     private void ApplyConnectionData()
     {
         if (transport == null)
@@ -109,6 +129,7 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
 
     private void StartHost()
     {
+        ApplyPlayerName();
         ApplyConnectionData();
 
         bool started = NetworkManager.Singleton.StartHost();
@@ -118,6 +139,7 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
 
     private void StartClient()
     {
+        ApplyPlayerName();
         ApplyConnectionData();
 
         bool started = NetworkManager.Singleton.StartClient();

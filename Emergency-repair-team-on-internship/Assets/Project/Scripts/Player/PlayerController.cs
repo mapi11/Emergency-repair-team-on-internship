@@ -373,6 +373,12 @@ public class PlayerController : MonoBehaviour
 
         if (IsInteractPressed() && currentInteractable != null)
         {
+            if (!currentInteractable.CanInteract(this))
+            {
+                StopInteraction();
+                return;
+            }
+
             float distanceToPlayer = Vector3.Distance(
                 GetInteractionOrigin().position,
                 currentInteractable.transform.position
