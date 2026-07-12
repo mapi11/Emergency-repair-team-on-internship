@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public abstract class SlopInteractable : MonoBehaviour
+public abstract class Interactable : MonoBehaviour
 {
     [Header("Interaction")]
     [SerializeField] private Transform handTarget;
@@ -8,20 +8,20 @@ public abstract class SlopInteractable : MonoBehaviour
 
     public Transform HandTarget => handTarget != null ? handTarget : transform;
 
-    public virtual bool CanInteract(SlopPlayerController player)
+    public virtual bool CanInteract(PlayerController player)
     {
         return canInteract;
     }
 
-    public virtual void OnHandBegin(SlopPlayerController player)
+    public virtual void OnHandBegin(PlayerController player)
     {
     }
 
-    public virtual void OnHandHold(SlopPlayerController player, float deltaTime)
+    public virtual void OnHandHold(PlayerController player, float deltaTime)
     {
     }
 
-    public virtual void OnHandEnd(SlopPlayerController player)
+    public virtual void OnHandEnd(PlayerController player)
     {
     }
 

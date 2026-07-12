@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 
-public class SlopButton : SlopInteractable
+public class PushButton : Interactable
 {
     [Header("Button Visual")]
     [SerializeField] private Transform buttonVisual;
@@ -55,13 +55,13 @@ public class SlopButton : SlopInteractable
         UpdateVisual();
     }
 
-    public override void OnHandBegin(SlopPlayerController player)
+    public override void OnHandBegin(PlayerController player)
     {
         isHeldByHand = true;
         holdProgress = 0f;
     }
 
-    public override void OnHandHold(SlopPlayerController player, float deltaTime)
+    public override void OnHandHold(PlayerController player, float deltaTime)
     {
         isHeldByHand = true;
 
@@ -76,7 +76,7 @@ public class SlopButton : SlopInteractable
         }
     }
 
-    public override void OnHandEnd(SlopPlayerController player)
+    public override void OnHandEnd(PlayerController player)
     {
         isHeldByHand = false;
         holdProgress = 0f;
@@ -96,7 +96,7 @@ public class SlopButton : SlopInteractable
 
         onPressed?.Invoke();
 
-        Debug.Log($"🔘 SlopButton {name}: pressed");
+        Debug.Log($"🔘 PushButton {name}: pressed");
     }
 
     private void Release()
@@ -108,7 +108,7 @@ public class SlopButton : SlopInteractable
 
         onReleased?.Invoke();
 
-        Debug.Log($"🔘 SlopButton {name}: released");
+        Debug.Log($"🔘 PushButton {name}: released");
     }
 
     private void UpdateVisual()

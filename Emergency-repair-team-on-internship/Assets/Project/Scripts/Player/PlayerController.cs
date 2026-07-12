@@ -1,10 +1,10 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(Rigidbody))]
-public class SlopPlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour
 {
     [Header("Look")]
     [SerializeField] private Transform cameraPivot;
@@ -30,6 +30,7 @@ public class SlopPlayerController : MonoBehaviour
     [Header("Crouch")]
     [SerializeField] private float standingHeight = 1.75f;
     [SerializeField] private float crouchHeight = 1.0f;
+    [SerializeField] private float crouchBodyLowering = 0.45f;
 
     [SerializeField] private float standingCameraY = 1.55f;
     [SerializeField] private float crouchCameraY = 0.92f;
@@ -42,20 +43,24 @@ public class SlopPlayerController : MonoBehaviour
     [SerializeField] private Transform leftShoulder;
     [SerializeField] private Transform rightShoulder;
 
+    [Header("Arms")]
+    [SerializeField] [Range(0f, 1f)] private float shoulderPitchInfluence = 0.35f;
+
     [Header("Hands")]
-    [SerializeField] private SlopHand leftHand;
-    [SerializeField] private SlopHand rightHand;
+    [SerializeField] private Hand leftHand;
+    [SerializeField] private Hand rightHand;
+
+    public enum InteractionHand { Right, Left }
 
     [Header("Interaction")]
+    [SerializeField] private InteractionHand interactionHand = InteractionHand.Right;
     [SerializeField] private float interactionRadius = 2.2f;
     [SerializeField] private float interactionViewDot = 0.35f;
     [SerializeField] private LayerMask interactableMask = ~0;
     [SerializeField] private float handActivationDistance = 0.12f;
 
-    [Header("Ragdoll / Fall")]
-    [SerializeField] private float ragdollDuration = 2.0f;
-    [SerializeField] private float standUpHeightOffset = 0.15f;
-    [SerializeField] private LayerMask groundMask = ~0;
+    [Header("Crosshair")]
+    [SerializeField] private GameObject crosshair;
 
     [Header("Multiplayer")]
     [SerializeField] private bool isLocal = true;
@@ -63,12 +68,10 @@ public class SlopPlayerController : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool isCrouching;
-    [SerializeField] private bool isRagdoll;
-    [SerializeField] private SlopInteractable currentInteractable;
+    [SerializeField] private Interactable currentInteractable;
 
     private CharacterController characterController;
     private Rigidbody rb;
-    private CapsuleCollider ragdollCollider;
 
     private Vector2 currentMoveInput;
     private Vector2 moveInputVelocity;
@@ -77,13 +80,17 @@ public class SlopPlayerController : MonoBehaviour
     private float pitch;
 
     private bool handReachedInteractable;
-    private Coroutine ragdollRoutine;
     private float shoulderY;
-    private float storedYaw;
     private float airborneSquash = 1f;
+    private float bodyInitialY;
+    private Vector3 leftShoulderInitialEuler;
+    private Vector3 rightShoulderInitialEuler;
 
-    public bool IsRagdoll => isRagdoll;
     public bool IsCrouching => isCrouching;
+
+    private Hand InteractionHandRef => interactionHand == InteractionHand.Right ? rightHand : leftHand;
+    public Hand CurrentInteractionHand => InteractionHandRef;
+    public InteractionHand SelectedInteractionHand => interactionHand;
 
     private void Awake()
     {
@@ -96,23 +103,22 @@ public class SlopPlayerController : MonoBehaviour
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.constraints = RigidbodyConstraints.FreezeRotation;
 
-        ragdollCollider = GetComponent<CapsuleCollider>();
-
-        if (ragdollCollider == null)
-        {
-            ragdollCollider = gameObject.AddComponent<CapsuleCollider>();
-        }
-
-        ragdollCollider.enabled = false;
-        ragdollCollider.height = standingHeight;
-        ragdollCollider.radius = characterController.radius;
-        ragdollCollider.center = new Vector3(0f, standingHeight * 0.5f, 0f);
-
         characterController.height = standingHeight;
+
+        if (bodyVisual != null)
+        {
+            bodyInitialY = bodyVisual.localPosition.y;
+        }
 
         if (leftShoulder != null)
         {
             shoulderY = leftShoulder.localPosition.y;
+            leftShoulderInitialEuler = leftShoulder.localEulerAngles;
+        }
+
+        if (rightShoulder != null)
+        {
+            rightShoulderInitialEuler = rightShoulder.localEulerAngles;
         }
 
         if (playerCamera == null)
@@ -138,30 +144,12 @@ public class SlopPlayerController : MonoBehaviour
 
     private void Update()
     {
-        if (isRagdoll)
-        {
-            UpdateHandsOnly();
-            return;
-        }
-
         HandleLook();
+        HandleArms();
         HandleCrouch();
         HandleMovement();
         HandleInteraction();
-        HandleRagdollInput();
-    }
-
-    private void UpdateHandsOnly()
-    {
-        if (rightHand != null)
-        {
-            rightHand.ClearTarget();
-        }
-
-        if (leftHand != null)
-        {
-            leftHand.ClearTarget();
-        }
+        UpdateCrosshair();
     }
 
     private void HandleLook()
@@ -184,6 +172,39 @@ public class SlopPlayerController : MonoBehaviour
         if (cameraPivot != null)
         {
             cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        }
+    }
+
+    private void HandleArms()
+    {
+        float crouchRatio = Mathf.InverseLerp(standingHeight, crouchHeight, characterController.height);
+        float crouchArmY = Mathf.Lerp(shoulderY, shoulderY * (crouchHeight / standingHeight), crouchRatio);
+
+        float pitchRatio = pitch / 90f;
+        float pitchArmY = crouchArmY - pitchRatio * 0.12f * shoulderPitchInfluence;
+
+        float targetArmY = Mathf.Lerp(crouchArmY, pitchArmY, Mathf.Abs(pitchRatio));
+
+        if (leftShoulder != null)
+        {
+            Vector3 euler = leftShoulderInitialEuler;
+            euler.x += pitch * shoulderPitchInfluence;
+            leftShoulder.localEulerAngles = euler;
+
+            Vector3 pos = leftShoulder.localPosition;
+            pos.y = Mathf.Lerp(pos.y, targetArmY, Time.deltaTime * crouchSpeed);
+            leftShoulder.localPosition = pos;
+        }
+
+        if (rightShoulder != null)
+        {
+            Vector3 euler = rightShoulderInitialEuler;
+            euler.x += pitch * shoulderPitchInfluence;
+            rightShoulder.localEulerAngles = euler;
+
+            Vector3 pos = rightShoulder.localPosition;
+            pos.y = Mathf.Lerp(pos.y, targetArmY, Time.deltaTime * crouchSpeed);
+            rightShoulder.localPosition = pos;
         }
     }
 
@@ -266,7 +287,14 @@ public class SlopPlayerController : MonoBehaviour
 
     private void HandleCrouch()
     {
-        isCrouching = IsCrouchPressed();
+        bool wantCrouch = IsCrouchPressed();
+
+        if (!wantCrouch && !HasHeadroom())
+        {
+            wantCrouch = true;
+        }
+
+        isCrouching = wantCrouch;
 
         float targetHeight = isCrouching ? crouchHeight : standingHeight;
         float targetCameraY = isCrouching ? crouchCameraY : standingCameraY;
@@ -313,23 +341,13 @@ public class SlopPlayerController : MonoBehaviour
                 new Vector3(finalScale, finalScale, finalScale),
                 Time.deltaTime * crouchSpeed
             );
+
+            float bodyOffset = (1f - baseScale) * crouchBodyLowering;
+            Vector3 bodyPos = bodyVisual.localPosition;
+            bodyPos.y = Mathf.Lerp(bodyPos.y, bodyInitialY - bodyOffset, Time.deltaTime * crouchSpeed);
+            bodyVisual.localPosition = bodyPos;
         }
 
-        float targetShoulderY = Mathf.Lerp(shoulderY, shoulderY * (crouchHeight / standingHeight), crouchRatio);
-
-        if (leftShoulder != null)
-        {
-            Vector3 pos = leftShoulder.localPosition;
-            pos.y = Mathf.Lerp(pos.y, targetShoulderY, Time.deltaTime * crouchSpeed);
-            leftShoulder.localPosition = pos;
-        }
-
-        if (rightShoulder != null)
-        {
-            Vector3 pos = rightShoulder.localPosition;
-            pos.y = Mathf.Lerp(pos.y, targetShoulderY, Time.deltaTime * crouchSpeed);
-            rightShoulder.localPosition = pos;
-        }
     }
 
     private void HandleInteraction()
@@ -339,9 +357,10 @@ public class SlopPlayerController : MonoBehaviour
             currentInteractable = FindBestInteractable();
             handReachedInteractable = false;
 
-            if (currentInteractable != null && rightHand != null)
+            Hand hand = InteractionHandRef;
+            if (currentInteractable != null && hand != null)
             {
-                rightHand.SetTarget(currentInteractable.HandTarget);
+                hand.SetTarget(currentInteractable.HandTarget);
             }
         }
 
@@ -358,11 +377,12 @@ public class SlopPlayerController : MonoBehaviour
                 return;
             }
 
-            if (rightHand != null)
+            Hand hand = InteractionHandRef;
+            if (hand != null)
             {
-                rightHand.SetTarget(currentInteractable.HandTarget);
+                hand.SetTarget(currentInteractable.HandTarget);
 
-                float handDistance = rightHand.DistanceToTarget;
+                float handDistance = hand.DistanceToTarget;
 
                 if (handDistance <= handActivationDistance)
                 {
@@ -393,13 +413,14 @@ public class SlopPlayerController : MonoBehaviour
         currentInteractable = null;
         handReachedInteractable = false;
 
-        if (rightHand != null)
+        Hand hand = InteractionHandRef;
+        if (hand != null)
         {
-            rightHand.ClearTarget();
+            hand.ClearTarget();
         }
     }
 
-    private SlopInteractable FindBestInteractable()
+    private Interactable FindBestInteractable()
     {
         Transform origin = GetInteractionOrigin();
 
@@ -410,12 +431,12 @@ public class SlopPlayerController : MonoBehaviour
             QueryTriggerInteraction.Collide
         );
 
-        SlopInteractable best = null;
+        Interactable best = null;
         float bestScore = -999f;
 
         for (int i = 0; i < hits.Length; i++)
         {
-            SlopInteractable interactable = hits[i].GetComponentInParent<SlopInteractable>();
+            Interactable interactable = hits[i].GetComponentInParent<Interactable>();
 
             if (interactable == null)
                 continue;
@@ -460,156 +481,6 @@ public class SlopPlayerController : MonoBehaviour
         }
 
         return transform;
-    }
-
-    private void HandleRagdollInput()
-    {
-        if (!WasRagdollPressedThisFrame())
-            return;
-
-        StartRagdoll();
-    }
-
-    public void StartRagdoll()
-    {
-        if (isRagdoll)
-            return;
-
-        if (ragdollRoutine != null)
-        {
-            StopCoroutine(ragdollRoutine);
-        }
-
-        ragdollRoutine = StartCoroutine(RagdollRoutine());
-    }
-
-    private IEnumerator RagdollRoutine()
-    {
-        isRagdoll = true;
-
-        StopInteraction();
-
-        if (leftHand != null)
-        {
-            leftHand.SetRagdollMode(true);
-        }
-
-        if (rightHand != null)
-        {
-            rightHand.SetRagdollMode(true);
-        }
-
-        storedYaw = transform.eulerAngles.y;
-        characterController.enabled = false;
-
-        ragdollCollider.height = standingHeight;
-        ragdollCollider.radius = characterController.radius;
-        ragdollCollider.center = new Vector3(0f, standingHeight * 0.5f, 0f);
-        ragdollCollider.enabled = true;
-
-        rb.isKinematic = false;
-        rb.useGravity = true;
-        rb.constraints = RigidbodyConstraints.None;
-
-        rb.linearVelocity = transform.forward * 1.5f + Vector3.up * 0.6f;
-        rb.angularVelocity = new Vector3(
-            Random.Range(-2.5f, 2.5f),
-            Random.Range(-1.5f, 1.5f),
-            Random.Range(-2.5f, 2.5f)
-        );
-
-        yield return new WaitForSeconds(ragdollDuration);
-
-        StandUp();
-
-        ragdollRoutine = null;
-    }
-
-    private void StandUp()
-    {
-        rb.linearVelocity = Vector3.zero;
-        rb.angularVelocity = Vector3.zero;
-
-        rb.isKinematic = true;
-        rb.useGravity = false;
-        rb.constraints = RigidbodyConstraints.FreezeRotation;
-
-        ragdollCollider.enabled = false;
-
-        Vector3 startPos = transform.position;
-        Vector3 standPosition = new Vector3(startPos.x, startPos.y, startPos.z);
-
-        if (Physics.Raycast(
-                startPos + Vector3.up * 5f,
-                Vector3.down,
-                out RaycastHit hit,
-                15f,
-                groundMask,
-                QueryTriggerInteraction.Ignore))
-        {
-            standPosition = hit.point + Vector3.up * standUpHeightOffset;
-            standPosition.x = startPos.x;
-            standPosition.z = startPos.z;
-        }
-        else
-        {
-            standPosition.y = Mathf.Max(standPosition.y, standUpHeightOffset + 0.5f);
-        }
-
-        transform.SetPositionAndRotation(
-            standPosition,
-            Quaternion.Euler(0f, storedYaw, 0f)
-        );
-
-        characterController.enabled = true;
-
-        characterController.height = standingHeight;
-        characterController.center = new Vector3(0f, standingHeight * 0.5f, 0f);
-
-        if (cameraPivot != null)
-        {
-            Vector3 cameraLocalPos = cameraPivot.localPosition;
-            cameraLocalPos.y = standingCameraY;
-            cameraPivot.localPosition = cameraLocalPos;
-            cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
-        }
-
-        if (headVisual != null && cameraPivot != null)
-        {
-            headVisual.localPosition = cameraPivot.localPosition;
-            headVisual.localRotation = cameraPivot.localRotation;
-        }
-
-        if (bodyVisual != null)
-        {
-            bodyVisual.localScale = Vector3.one;
-        }
-
-        if (leftShoulder != null)
-        {
-            Vector3 pos = leftShoulder.localPosition;
-            pos.y = shoulderY;
-            leftShoulder.localPosition = pos;
-        }
-
-        if (rightShoulder != null)
-        {
-            Vector3 pos = rightShoulder.localPosition;
-            pos.y = shoulderY;
-            rightShoulder.localPosition = pos;
-        }
-
-        if (leftHand != null)
-        {
-            leftHand.SetRagdollMode(false);
-        }
-
-        if (rightHand != null)
-        {
-            rightHand.SetRagdollMode(false);
-        }
-
-        isRagdoll = false;
     }
 
     private bool IsJumpPressed()
@@ -675,14 +546,31 @@ public class SlopPlayerController : MonoBehaviour
         return keyboard.eKey.wasReleasedThisFrame;
     }
 
-    private bool WasRagdollPressedThisFrame()
+    private Collider[] headroomHits = new Collider[16];
+
+    private bool HasHeadroom()
     {
-        Keyboard keyboard = Keyboard.current;
+        float radius = characterController != null ? characterController.radius * 0.9f : 0.3f;
+        float currentTop = transform.position.y + characterController.height;
+        float standingTop = transform.position.y + standingHeight;
+        float bottom = currentTop + 0.05f;
+        float top = standingTop - 0.05f;
 
-        if (keyboard == null)
-            return false;
+        if (bottom >= top)
+            return true;
 
-        return keyboard.gKey.wasPressedThisFrame;
+        Vector3 start = new Vector3(transform.position.x, bottom, transform.position.z);
+        Vector3 end = new Vector3(transform.position.x, top, transform.position.z);
+
+        int count = Physics.OverlapCapsuleNonAlloc(start, end, radius, headroomHits, ~0, QueryTriggerInteraction.Ignore);
+
+        for (int i = 0; i < count; i++)
+        {
+            if (!headroomHits[i].transform.IsChildOf(transform))
+                return false;
+        }
+
+        return true;
     }
 
     private void SetLayerRecursively(Transform obj, int layer)
@@ -693,6 +581,46 @@ public class SlopPlayerController : MonoBehaviour
         {
             SetLayerRecursively(obj.GetChild(i), layer);
         }
+    }
+
+    private void UpdateCrosshair()
+    {
+        if (crosshair == null)
+            return;
+
+        crosshair.SetActive(HasInteractableInSight());
+    }
+
+    private bool HasInteractableInSight()
+    {
+        Transform origin = GetInteractionOrigin();
+
+        Collider[] hits = Physics.OverlapSphere(
+            origin.position,
+            interactionRadius,
+            interactableMask,
+            QueryTriggerInteraction.Collide);
+
+        for (int i = 0; i < hits.Length; i++)
+        {
+            Interactable interactable = hits[i].GetComponentInParent<Interactable>();
+
+            if (interactable == null || !interactable.CanInteract(this))
+                continue;
+
+            Vector3 toTarget = interactable.transform.position - origin.position;
+            float distance = toTarget.magnitude;
+
+            if (distance <= 0.01f)
+                continue;
+
+            float dot = Vector3.Dot(origin.forward, toTarget.normalized);
+
+            if (dot >= interactionViewDot)
+                return true;
+        }
+
+        return false;
     }
 
     private void OnDrawGizmosSelected()

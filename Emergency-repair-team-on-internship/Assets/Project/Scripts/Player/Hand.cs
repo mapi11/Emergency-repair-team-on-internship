@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class SlopHand : MonoBehaviour
+public class Hand : MonoBehaviour
 {
     [Header("Follow")]
     [SerializeField] private Transform followRoot;
@@ -12,9 +12,17 @@ public class SlopHand : MonoBehaviour
     [SerializeField] private float targetFollowSmoothTime = 0.04f;
     [SerializeField] private float maxSpeed = 18f;
 
-    [Header("Slop Swing")]
+    [Header("Swing")]
     [SerializeField] private float swingAmount = 0.08f;
     [SerializeField] private float swingSpeed = 9f;
+
+    [Header("Sprint Sway")]
+    [SerializeField] private float sprintSwayAmount = 0.12f;
+    [SerializeField] private float sprintSwaySpeed = 14f;
+    [SerializeField] private float sprintSpeedThreshold = 5.5f;
+
+    [Header("Pitch Follow")]
+    [SerializeField] [Range(0f, 1f)] private float pitchInfluence = 0.35f;
 
     [Header("Arm Line Optional")]
     [SerializeField] private Transform shoulder;
@@ -28,10 +36,18 @@ public class SlopHand : MonoBehaviour
     private Vector3 velocity;
     private Vector3 previousFollowRootPosition;
     private float swingTime;
+    private Vector3 smoothedVelocity;
 
     private Quaternion GetYawRotation()
     {
         return Quaternion.Euler(0f, followRoot.eulerAngles.y, 0f);
+    }
+
+    private Quaternion GetHandRotation()
+    {
+        float pitch = followRoot.localEulerAngles.x;
+        if (pitch > 180f) pitch -= 360f;
+        return Quaternion.Euler(pitch * pitchInfluence, followRoot.eulerAngles.y, 0f);
     }
 
     public float DistanceToTarget
@@ -52,9 +68,9 @@ public class SlopHand : MonoBehaviour
 
         if (followRoot != null)
         {
-            Quaternion yaw = GetYawRotation();
-            transform.position = followRoot.position + yaw * idleLocalPosition;
-            transform.rotation = yaw * Quaternion.Euler(idleLocalEuler);
+            Quaternion handRot = GetHandRotation();
+            transform.position = followRoot.position + handRot * idleLocalPosition;
+            transform.rotation = handRot * Quaternion.Euler(idleLocalEuler);
             previousFollowRootPosition = followRoot.position;
         }
 
@@ -87,7 +103,7 @@ public class SlopHand : MonoBehaviour
         else
         {
             desiredPosition = GetIdlePosition();
-            desiredRotation = GetYawRotation() * Quaternion.Euler(idleLocalEuler);
+            desiredRotation = GetHandRotation() * Quaternion.Euler(idleLocalEuler);
         }
 
         float smoothTime = hasTarget ? targetFollowSmoothTime : followSmoothTime;
@@ -111,13 +127,14 @@ public class SlopHand : MonoBehaviour
 
     private Vector3 GetIdlePosition()
     {
-        Vector3 rootVelocity = (followRoot.position - previousFollowRootPosition) / Mathf.Max(Time.deltaTime, 0.001f);
+        Vector3 rawVelocity = (followRoot.position - previousFollowRootPosition) / Mathf.Max(Time.deltaTime, 0.001f);
+        smoothedVelocity = Vector3.Lerp(smoothedVelocity, rawVelocity, Time.deltaTime * 12f);
 
         swingTime += Time.deltaTime * swingSpeed;
 
-        Vector3 swing = -followRoot.InverseTransformDirection(rootVelocity) * swingAmount;
+        Vector3 swing = -followRoot.InverseTransformDirection(smoothedVelocity) * swingAmount;
 
-        float speed = rootVelocity.magnitude;
+        float speed = smoothedVelocity.magnitude;
         if (speed > 0.1f)
         {
             swing += new Vector3(
@@ -127,10 +144,15 @@ public class SlopHand : MonoBehaviour
             );
         }
 
-        swing = Vector3.ClampMagnitude(swing, 0.18f);
+        if (speed > sprintSpeedThreshold)
+        {
+            float intensity = Mathf.InverseLerp(sprintSpeedThreshold, sprintSpeedThreshold + 2f, speed);
+            swing.x += Mathf.Sin(swingTime * (sprintSwaySpeed / swingSpeed)) * sprintSwayAmount * intensity;
+        }
 
-        Quaternion yaw = GetYawRotation();
-        return followRoot.position + yaw * (idleLocalPosition + swing);
+        swing = Vector3.ClampMagnitude(swing, 0.3f);
+
+        return followRoot.position + GetHandRotation() * (idleLocalPosition + swing);
     }
 
     private Vector3 GetRagdollLoosePosition()
@@ -142,8 +164,7 @@ public class SlopHand : MonoBehaviour
         float noise = Mathf.Sin(Time.time * 5f) * 0.04f;
         looseLocal.x += noise;
 
-        Quaternion yaw = GetYawRotation();
-        return followRoot.position + yaw * looseLocal;
+        return followRoot.position + GetHandRotation() * looseLocal;
     }
 
     public void SetTarget(Transform newTarget)
