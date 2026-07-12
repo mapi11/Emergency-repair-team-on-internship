@@ -22,7 +22,7 @@ public class Hand : MonoBehaviour
     [SerializeField] private float sprintSpeedThreshold = 5.5f;
 
     [Header("Pitch Follow")]
-    [SerializeField] [Range(0f, 1f)] private float pitchInfluence = 0.35f;
+    [SerializeField][Range(0f, 1f)] private float pitchInfluence = 0.35f;
 
     [Header("Arm Line Optional")]
     [SerializeField] private Transform shoulder;
@@ -32,6 +32,10 @@ public class Hand : MonoBehaviour
     [SerializeField] private bool hasTarget;
     [SerializeField] private Transform target;
     [SerializeField] private bool isRagdollMode;
+
+    [SerializeField] private bool useNetworkPose;
+    [SerializeField] private Vector3 networkPosition;
+    [SerializeField] private Quaternion networkRotation;
 
     private Vector3 velocity;
     private Vector3 previousFollowRootPosition;
@@ -79,6 +83,24 @@ public class Hand : MonoBehaviour
 
     private void LateUpdate()
     {
+        if (useNetworkPose)
+        {
+            transform.position = Vector3.Lerp(
+                transform.position,
+                networkPosition,
+                Time.deltaTime * 20f
+            );
+
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                networkRotation,
+                Time.deltaTime * 20f
+            );
+
+            UpdateLine();
+            return;
+        }
+
         if (followRoot == null) return;
 
         UpdateHand();
@@ -206,5 +228,16 @@ public class Hand : MonoBehaviour
 
         armLine.SetPosition(0, shoulder.position);
         armLine.SetPosition(1, transform.position);
+    }
+
+    public void SetNetworkPoseMode(bool value)
+    {
+        useNetworkPose = value;
+    }
+
+    public void ApplyNetworkPose(Vector3 position, Quaternion rotation)
+    {
+        networkPosition = position;
+        networkRotation = rotation;
     }
 }

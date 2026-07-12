@@ -1,6 +1,7 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public abstract class Interactable : MonoBehaviour
+public abstract class Interactable : NetworkBehaviour
 {
     [Header("Interaction")]
     [SerializeField] private Transform handTarget;

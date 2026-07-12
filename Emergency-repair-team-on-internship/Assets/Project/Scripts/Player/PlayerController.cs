@@ -91,6 +91,10 @@ public class PlayerController : MonoBehaviour
     private Hand InteractionHandRef => interactionHand == InteractionHand.Right ? rightHand : leftHand;
     public Hand CurrentInteractionHand => InteractionHandRef;
     public InteractionHand SelectedInteractionHand => interactionHand;
+    public bool IsLocalPlayer => isLocal;
+    public float Pitch => pitch;
+    public Interactable CurrentInteractable => currentInteractable;
+    public bool HasCurrentInteractable => currentInteractable != null;
 
     private void Awake()
     {
@@ -144,6 +148,9 @@ public class PlayerController : MonoBehaviour
 
     private void Update()
     {
+        if (!isLocal)
+            return;
+
         HandleLook();
         HandleArms();
         HandleCrouch();
@@ -621,6 +628,172 @@ public class PlayerController : MonoBehaviour
         }
 
         return false;
+    }
+
+    //=============== Network=================
+
+    public void SetLocalPlayer(bool value)
+    {
+        isLocal = value;
+
+        if (playerCamera == null)
+        {
+            playerCamera = GetComponentInChildren<Camera>(true);
+        }
+
+        if (playerCamera != null)
+        {
+            playerCamera.enabled = value;
+
+            AudioListener listener = playerCamera.GetComponent<AudioListener>();
+            if (listener != null)
+            {
+                listener.enabled = value;
+            }
+        }
+
+        if (crosshair != null)
+        {
+            crosshair.SetActive(value);
+        }
+
+        if (value)
+        {
+            int layerMask = 1 << localOnlyLayer;
+
+            if (headVisual != null)
+            {
+                SetLayerRecursively(headVisual, localOnlyLayer);
+            }
+
+            if (playerCamera != null)
+            {
+                playerCamera.cullingMask &= ~layerMask;
+            }
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+    }
+
+    public void ApplyRemoteVisualState(bool remoteCrouching, float remotePitch)
+    {
+        if (isLocal)
+            return;
+
+        isCrouching = remoteCrouching;
+        pitch = remotePitch;
+
+        if (characterController == null)
+            characterController = GetComponent<CharacterController>();
+
+        float targetHeight = isCrouching ? crouchHeight : standingHeight;
+        float targetCameraY = isCrouching ? crouchCameraY : standingCameraY;
+
+        characterController.height = Mathf.Lerp(
+            characterController.height,
+            targetHeight,
+            Time.deltaTime * crouchSpeed
+        );
+
+        characterController.center = new Vector3(
+            0f,
+            characterController.height * 0.5f,
+            0f
+        );
+
+        if (cameraPivot != null)
+        {
+            Vector3 cameraLocalPos = cameraPivot.localPosition;
+
+            cameraLocalPos.y = Mathf.Lerp(
+                cameraLocalPos.y,
+                targetCameraY,
+                Time.deltaTime * crouchSpeed
+            );
+
+            cameraPivot.localPosition = cameraLocalPos;
+            cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        }
+
+        if (headVisual != null && cameraPivot != null)
+        {
+            headVisual.localPosition = cameraPivot.localPosition;
+            headVisual.localRotation = cameraPivot.localRotation;
+        }
+
+        ApplyRemoteArmsAndBody();
+    }
+
+    private void ApplyRemoteArmsAndBody()
+    {
+        if (characterController == null)
+            return;
+
+        float crouchRatio = Mathf.InverseLerp(
+            standingHeight,
+            crouchHeight,
+            characterController.height
+        );
+
+        float crouchArmY = Mathf.Lerp(
+            shoulderY,
+            shoulderY * (crouchHeight / standingHeight),
+            crouchRatio
+        );
+
+        float pitchRatio = pitch / 90f;
+        float pitchArmY = crouchArmY - pitchRatio * 0.12f * shoulderPitchInfluence;
+
+        float targetArmY = Mathf.Lerp(
+            crouchArmY,
+            pitchArmY,
+            Mathf.Abs(pitchRatio)
+        );
+
+        if (leftShoulder != null)
+        {
+            Vector3 euler = leftShoulderInitialEuler;
+            euler.x += pitch * shoulderPitchInfluence;
+            leftShoulder.localEulerAngles = euler;
+
+            Vector3 pos = leftShoulder.localPosition;
+            pos.y = Mathf.Lerp(pos.y, targetArmY, Time.deltaTime * crouchSpeed);
+            leftShoulder.localPosition = pos;
+        }
+
+        if (rightShoulder != null)
+        {
+            Vector3 euler = rightShoulderInitialEuler;
+            euler.x += pitch * shoulderPitchInfluence;
+            rightShoulder.localEulerAngles = euler;
+
+            Vector3 pos = rightShoulder.localPosition;
+            pos.y = Mathf.Lerp(pos.y, targetArmY, Time.deltaTime * crouchSpeed);
+            rightShoulder.localPosition = pos;
+        }
+
+        if (bodyVisual != null)
+        {
+            float baseScale = Mathf.Lerp(1f, 0.55f, crouchRatio);
+
+            bodyVisual.localScale = Vector3.Lerp(
+                bodyVisual.localScale,
+                new Vector3(baseScale, baseScale, baseScale),
+                Time.deltaTime * crouchSpeed
+            );
+
+            float bodyOffset = (1f - baseScale) * crouchBodyLowering;
+
+            Vector3 bodyPos = bodyVisual.localPosition;
+            bodyPos.y = Mathf.Lerp(
+                bodyPos.y,
+                bodyInitialY - bodyOffset,
+                Time.deltaTime * crouchSpeed
+            );
+
+            bodyVisual.localPosition = bodyPos;
+        }
     }
 
     private void OnDrawGizmosSelected()
