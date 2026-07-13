@@ -266,8 +266,16 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 1880691133085265111, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Name
+      value: Sphere_Eye_R
+      objectReference: {fileID: 0}
+    - target: {fileID: 1880691133085265111, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_Layer
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2610468074053729179, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Name
+      value: Sphere_Pupil_L
       objectReference: {fileID: 0}
     - target: {fileID: 2610468074053729179, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_Layer
@@ -281,9 +289,21 @@ PrefabInstance:
       propertyPath: m_TagString
       value: MainCamera
       objectReference: {fileID: 0}
+    - target: {fileID: 4028440047409443071, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Name
+      value: Eye_L
+      objectReference: {fileID: 0}
+    - target: {fileID: 4402791459789288440, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Name
+      value: Eye_R
+      objectReference: {fileID: 0}
     - target: {fileID: 4866531798986619005, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: near clip plane
       value: 0.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 8324031091069844331, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Name
+      value: Sphere_Eye_L
       objectReference: {fileID: 0}
     - target: {fileID: 8324031091069844331, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_Layer
@@ -300,6 +320,9 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2301791019539966925}
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1274077256861787821}
     - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
       addedObject: {fileID: 840230281053165502}
@@ -322,11 +345,57 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 2764898240956680553}
   m_SourcePrefab: {fileID: 100100000, guid: 757e198222a17af43a243b993516a699, type: 3}
+--- !u!4 &742249930716528483 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 581404135530095281, guid: 757e198222a17af43a243b993516a699, type: 3}
+  m_PrefabInstance: {fileID: 170168777652854226}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &926440045010782362 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1047069140710118728, guid: 757e198222a17af43a243b993516a699, type: 3}
+  m_PrefabInstance: {fileID: 170168777652854226}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1156839613533151179 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
   m_PrefabInstance: {fileID: 170168777652854226}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1274077256861787821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1156839613533151179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e020312a5c1c3434198215d59018baa6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftEyeRoot: {fileID: 926440045010782362}
+  rightEyeRoot: {fileID: 5109118770894592042}
+  leftPupil: {fileID: 742249930716528483}
+  rightPupil: {fileID: 8242197053787330341}
+  headReference: {fileID: 9009639669726759946}
+  playerLookRadius: 2.2
+  standingEyeHeight: 1.45
+  crouchingEyeHeight: 0.95
+  pupilMoveDistance: 0.075
+  horizontalMultiplier: 1.25
+  verticalMultiplier: 1.65
+  lookSmooth: 8
+  maxHorizontal: 0.3
+  maxVertical: 0.3
+  invertHorizontal: 0
+  invertVertical: 0
+  idleAmount: 0.008
+  walkBounceAmount: 0.07
+  walkSideAmount: 0.03
+  jumpBounceAmount: 1
+  movementSpeedForMaxBounce: 5
+  currentTargetPlayer: {fileID: 0}
+  currentPupilOffset: {x: 0, y: 0}
+  debugTargetPoint: {x: 0, y: 0, z: 0}
 --- !u!114 &840230281053165502
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -531,6 +600,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f9d6fc9c1cb6b746b0738ef64a88d9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &5109118770894592042 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4952750032453338616, guid: 757e198222a17af43a243b993516a699, type: 3}
+  m_PrefabInstance: {fileID: 170168777652854226}
+  m_PrefabAsset: {fileID: 0}
 --- !u!81 &5741375404085200143 stripped
 AudioListener:
   m_CorrespondingSourceObject: {fileID: 5616544095229286621, guid: 757e198222a17af43a243b993516a699, type: 3}
@@ -546,6 +620,11 @@ MeshRenderer:
   m_CorrespondingSourceObject: {fileID: 8255171829502751321, guid: 757e198222a17af43a243b993516a699, type: 3}
   m_PrefabInstance: {fileID: 170168777652854226}
   m_PrefabAsset: {fileID: 0}
+--- !u!4 &8242197053787330341 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8088083499545758455, guid: 757e198222a17af43a243b993516a699, type: 3}
+  m_PrefabInstance: {fileID: 170168777652854226}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &8491348390175828798 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8614220352158938860, guid: 757e198222a17af43a243b993516a699, type: 3}
@@ -557,3 +636,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3f9d6fc9c1cb6b746b0738ef64a88d9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!4 &9009639669726759946 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 9174997997963481560, guid: 757e198222a17af43a243b993516a699, type: 3}
+  m_PrefabInstance: {fileID: 170168777652854226}
+  m_PrefabAsset: {fileID: 0}

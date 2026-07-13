@@ -267,7 +267,7 @@ GameObject:
   - component: {fileID: 6761380560624619570}
   - component: {fileID: 3089597423796811954}
   m_Layer: 6
-  m_Name: Sphere_Eye_L
+  m_Name: Sphere_Eye_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -353,7 +353,7 @@ GameObject:
   - component: {fileID: 7822218466110345449}
   - component: {fileID: 4677025344868675587}
   m_Layer: 6
-  m_Name: Sphere_Pupil_R
+  m_Name: Sphere_Pupil_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -367,8 +367,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2610468074053729179}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.27999997, y: 0, z: 0.03999999}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.03999999}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -521,6 +521,9 @@ MonoBehaviour:
   hasTarget: 0
   target: {fileID: 0}
   isRagdollMode: 0
+  useNetworkPose: 0
+  networkPosition: {x: 0, y: 0, z: 0}
+  networkRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!120 &4439186504835526549
 LineRenderer:
   serializedVersion: 2
@@ -775,7 +778,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1047069140710118728}
   m_Layer: 0
-  m_Name: Eye_R
+  m_Name: Eye_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -894,7 +897,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4952750032453338616}
   m_Layer: 0
-  m_Name: Eye_L
+  m_Name: Eye_R
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1157,6 +1160,9 @@ MonoBehaviour:
   hasTarget: 0
   target: {fileID: 0}
   isRagdollMode: 0
+  useNetworkPose: 0
+  networkPosition: {x: 0, y: 0, z: 0}
+  networkRotation: {x: 0, y: 0, z: 0, w: 0}
 --- !u!120 &427638933326144046
 LineRenderer:
   serializedVersion: 2
@@ -1497,7 +1503,7 @@ GameObject:
   - component: {fileID: 4779587428144965491}
   - component: {fileID: 3938027545104503969}
   m_Layer: 6
-  m_Name: Sphere_Eye_R
+  m_Name: Sphere_Eye_L
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1684,7 +1690,7 @@ Transform:
   m_GameObject: {fileID: 9104630456215066936}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.27999997, y: 0, z: 0.029999986}
+  m_LocalPosition: {x: 0, y: 0, z: 0.03999999}
   m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children: []

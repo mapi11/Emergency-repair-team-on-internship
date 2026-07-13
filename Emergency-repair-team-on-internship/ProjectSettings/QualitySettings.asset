@@ -57,7 +57,8 @@ QualitySettings:
     terrainBillboardStart: 50
     terrainFadeLength: 5
     terrainMaxTrees: 50
-    excludedTargetPlatforms: []
+    excludedTargetPlatforms:
+    - Standalone
   - serializedVersion: 4
     name: PC
     pixelLightCount: 2
@@ -112,7 +113,6 @@ QualitySettings:
     excludedTargetPlatforms:
     - Android
     - iPhone
-    - Standalone
   m_TextureMipmapLimitGroupNames: []
   m_PerPlatformDefaultQuality:
     Android: 0
@@ -125,7 +125,7 @@ QualitySettings:
     PS5: 1
     Server: 0
     Stadia: 0
-    Standalone: 0
+    Standalone: 1
     WebGL: 0
     Windows Store Apps: 0
     XboxOne: 0

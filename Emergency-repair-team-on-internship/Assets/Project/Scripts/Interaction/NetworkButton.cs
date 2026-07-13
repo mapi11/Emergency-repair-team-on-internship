@@ -23,6 +23,8 @@ public class NetworkButton : Interactable
     public UnityEvent onPressed;
     public UnityEvent onReleased;
 
+    public bool IsPressed => networkIsPressed.Value;
+
     [Header("Debug")]
     [SerializeField] private bool visualPressed;
 
