@@ -1,10 +1,18 @@
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class LobbyHudUI : MonoBehaviour
 {
     [SerializeField] private TMP_Text bottomText;
+    [SerializeField] private Button copyCodeButton;
+
+    private void Awake()
+    {
+        if (copyCodeButton != null)
+            copyCodeButton.onClick.AddListener(OnCopyCode);
+    }
 
     private void Update()
     {
@@ -38,5 +46,15 @@ public class LobbyHudUI : MonoBehaviour
 
         bottomText.text =
             $"{GameSessionData.GameVersion}   |   Mode: {mode}   |   Join Code: {code}   |   Connection: {GameSessionData.ConnectionType}";
+    }
+
+    private void OnCopyCode()
+    {
+        string code = GameSessionData.JoinCode;
+
+        if (string.IsNullOrWhiteSpace(code))
+            return;
+
+        GUIUtility.systemCopyBuffer = code;
     }
 }

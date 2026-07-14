@@ -11,7 +11,8 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private TMP_InputField playerNameInput;
     [SerializeField] private Image colorPreview;
     [SerializeField] private TMP_Text colorText;
-    [SerializeField] private Button randomColorButton;
+    [SerializeField] private TMP_Dropdown colorDropdown;
+    [SerializeField] private TMP_Dropdown handDropdown;
 
     [Header("Local")]
     [SerializeField] private TMP_InputField addressInput;
@@ -25,12 +26,6 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button joinOnlineButton;
     [SerializeField] private Button pasteCodeButton;
     [SerializeField] private Button copyCodeButton;
-
-    [Header("Connection Type")]
-    [SerializeField] private Button udpButton;
-    [SerializeField] private Button dtlsButton;
-    [SerializeField] private Button wssButton;
-    [SerializeField] private TMP_Text connectionTypeText;
 
     [Header("Texts")]
     [SerializeField] private TMP_Text statusText;
@@ -64,7 +59,6 @@ public class MainMenuUI : MonoBehaviour
         InitializeFields();
         BindButtons();
         RefreshColor();
-        RefreshConnectionType();
         RefreshFooter();
         SetStatus(connectionManager.Status);
     }
@@ -84,6 +78,9 @@ public class MainMenuUI : MonoBehaviour
         LocalPlayerSettings.Load(profileId);
         selectedColor = LocalPlayerSettings.PlayerColor;
 
+        GameSessionData.SelectedColorIndex = PlayerPrefs.GetInt($"PlayerColorIndex_{LocalPlayerSettings.ProfileId}", 0);
+        GameSessionData.SelectedHandIndex = PlayerPrefs.GetInt($"PlayerHandIndex_{LocalPlayerSettings.ProfileId}", 0);
+
         if (playerNameInput != null)
         {
             playerNameInput.text = LocalPlayerSettings.PlayerName;
@@ -98,15 +95,62 @@ public class MainMenuUI : MonoBehaviour
         {
             portInput.text = "7777";
         }
+
+        InitColorDropdown();
+        InitHandDropdown();
+    }
+
+    private void InitColorDropdown()
+    {
+        if (colorDropdown == null)
+            return;
+
+        colorDropdown.ClearOptions();
+
+        var options = new System.Collections.Generic.List<TMP_Dropdown.OptionData>();
+
+        for (int i = 0; i < GameSessionData.ColorNames.Length; i++)
+        {
+            options.Add(new TMP_Dropdown.OptionData(GameSessionData.ColorNames[i]));
+        }
+
+        colorDropdown.AddOptions(options);
+        colorDropdown.SetValueWithoutNotify(GameSessionData.SelectedColorIndex);
+        colorDropdown.onValueChanged.AddListener(OnColorChanged);
+    }
+
+    private void InitHandDropdown()
+    {
+        if (handDropdown == null)
+            return;
+
+        handDropdown.ClearOptions();
+
+        handDropdown.AddOptions(new System.Collections.Generic.List<string> { "Right", "Left" });
+        handDropdown.SetValueWithoutNotify(GameSessionData.SelectedHandIndex);
+        handDropdown.onValueChanged.AddListener(OnHandChanged);
+    }
+
+    private void OnColorChanged(int index)
+    {
+        GameSessionData.SelectedColorIndex = index;
+        selectedColor = GameSessionData.ColorValues[index];
+        LocalPlayerSettings.Load(GetProfileId());
+        LocalPlayerSettings.SetPlayerColor(selectedColor);
+        PlayerPrefs.SetInt($"PlayerColorIndex_{LocalPlayerSettings.ProfileId}", index);
+        PlayerPrefs.Save();
+        RefreshColor();
+    }
+
+    private void OnHandChanged(int index)
+    {
+        GameSessionData.SelectedHandIndex = index;
+        PlayerPrefs.SetInt($"PlayerHandIndex_{LocalPlayerSettings.ProfileId}", index);
+        PlayerPrefs.Save();
     }
 
     private void BindButtons()
     {
-        if (randomColorButton != null)
-        {
-            randomColorButton.onClick.AddListener(OnRandomColorClicked);
-        }
-
         if (startLocalHostButton != null)
         {
             startLocalHostButton.onClick.AddListener(OnStartLocalHostClicked);
@@ -136,33 +180,6 @@ public class MainMenuUI : MonoBehaviour
         {
             copyCodeButton.onClick.AddListener(OnCopyCodeClicked);
         }
-
-        if (udpButton != null)
-        {
-            udpButton.onClick.AddListener(() => SetConnectionType("udp"));
-        }
-
-        if (dtlsButton != null)
-        {
-            dtlsButton.onClick.AddListener(() => SetConnectionType("dtls"));
-        }
-
-        if (wssButton != null)
-        {
-            wssButton.onClick.AddListener(() => SetConnectionType("wss"));
-        }
-    }
-
-    private void OnRandomColorClicked()
-    {
-        string profileId = GetProfileId();
-
-        LocalPlayerSettings.Load(profileId);
-        LocalPlayerSettings.GenerateAndSaveRandomColor();
-
-        selectedColor = LocalPlayerSettings.PlayerColor;
-
-        RefreshColor();
     }
 
     private void OnStartLocalHostClicked()
@@ -239,12 +256,6 @@ public class MainMenuUI : MonoBehaviour
         SetStatus($"Copied Join Code: {code}");
     }
 
-    private void SetConnectionType(string type)
-    {
-        connectionManager.SetRelayConnectionType(type);
-        RefreshConnectionType();
-    }
-
     private void ApplyLocalConnectionFields()
     {
         string address = "127.0.0.1";
@@ -305,17 +316,6 @@ public class MainMenuUI : MonoBehaviour
         if (colorText != null)
         {
             colorText.text = $"Color: R{color.r} G{color.g} B{color.b}";
-        }
-    }
-
-    private void RefreshConnectionType()
-    {
-        if (connectionManager == null)
-            return;
-
-        if (connectionTypeText != null)
-        {
-            connectionTypeText.text = $"Connection: {connectionManager.RelayConnectionType}";
         }
     }
 

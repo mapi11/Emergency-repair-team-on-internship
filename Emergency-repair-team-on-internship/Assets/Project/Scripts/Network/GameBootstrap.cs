@@ -4,7 +4,7 @@ public class GameBootstrap : MonoBehaviour
 {
     private void Awake()
     {
-        Application.targetFrameRate = 120;
-        QualitySettings.vSyncCount = 0;
+        Application.targetFrameRate = 300;
+        QualitySettings.vSyncCount = -1;
     }
 }

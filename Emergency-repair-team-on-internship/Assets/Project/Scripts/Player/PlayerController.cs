@@ -144,6 +144,8 @@ public class PlayerController : MonoBehaviour
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        interactionHand = GameSessionData.SelectedHandIndex == 1 ? InteractionHand.Left : InteractionHand.Right;
     }
 
     private void Update()
@@ -152,9 +154,6 @@ public class PlayerController : MonoBehaviour
             return;
 
         HandleCursorEscape();
-
-        if (Cursor.lockState != CursorLockMode.Locked)
-            return;
 
         HandleLook();
         HandleArms();
@@ -166,6 +165,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleLook()
     {
+        if (Cursor.lockState != CursorLockMode.Locked)
+            return;
+
         Mouse mouse = Mouse.current;
 
         if (mouse == null)
@@ -364,6 +366,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleInteraction()
     {
+        if (Cursor.lockState != CursorLockMode.Locked)
+            return;
+
         if (WasInteractPressedThisFrame())
         {
             currentInteractable = FindBestInteractable();
@@ -707,6 +712,7 @@ public class PlayerController : MonoBehaviour
             if (headVisual != null)
             {
                 SetLayerRecursively(headVisual, localOnlyLayer);
+                SetLayerRecursively(bodyVisual, localOnlyLayer);
             }
 
             if (playerCamera != null)

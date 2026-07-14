@@ -451,7 +451,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   lobbySceneName: LobbyScene
-  teleportDelay: 0.1
+  teleportDelay: 0.15
   teleportOnlyOwner: 1
   hasTeleported: 0
   lastTeleportPosition: {x: 0, y: 0, z: 0}

@@ -85,7 +85,15 @@ public static class LocalPlayerSettings
     {
         int index = Random.Range(0, ColorPalette.Length);
         SetPlayerColor(ColorPalette[index]);
+        GameSessionData.SelectedColorIndex = index;
     }
+
+    public static Color32 GetPaletteColor(int index)
+    {
+        return ColorPalette[Mathf.Clamp(index, 0, ColorPalette.Length - 1)];
+    }
+
+    public static int PaletteSize => ColorPalette.Length;
 
     public static void SetPlayerColor(Color32 color)
     {
