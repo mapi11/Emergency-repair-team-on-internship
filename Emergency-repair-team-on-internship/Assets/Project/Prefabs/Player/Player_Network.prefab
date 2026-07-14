@@ -177,6 +177,37 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 8625861617244043067}
   m_maskType: 0
+--- !u!1 &3385662766971611882
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5454175755207151458}
+  m_Layer: 0
+  m_Name: DropOrigin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5454175755207151458
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3385662766971611882}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.4200001, z: 0.544}
+  m_LocalScale: {x: 0.2, y: 0.2, z: 0.2}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5638115596135456577}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &5010308990427170304
 GameObject:
   m_ObjectHideFlags: 0
@@ -289,6 +320,10 @@ PrefabInstance:
       propertyPath: isLocal
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3186245754469773085, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: maxChargeTime
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3866916752521031058, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_TagString
       value: MainCamera
@@ -305,6 +340,10 @@ PrefabInstance:
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4784045969287162096, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_AdditionalShaderChannelsFlag
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 4866531798986619005, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: far clip plane
       value: 100
@@ -312,6 +351,10 @@ PrefabInstance:
     - target: {fileID: 4866531798986619005, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: near clip plane
       value: 0.21
+      objectReference: {fileID: 0}
+    - target: {fileID: 5645030498618208233, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8324031091069844331, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_Name
@@ -331,6 +374,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1221688299579084739, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2301791019539966925}
+    - targetCorrespondingSourceObject: {fileID: 5503983518300111507, guid: 757e198222a17af43a243b993516a699, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5454175755207151458}
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
@@ -426,10 +472,14 @@ MonoBehaviour:
   playerController: {fileID: 3344870759466545871}
   leftHoldPivot: {fileID: 358198167749589956}
   rightHoldPivot: {fileID: 8668837333863770794}
-  dropOrigin: {fileID: 0}
+  dropOrigin: {fileID: 5454175755207151458}
   heldItemPrefabs: []
   worldDropPrefabs: []
   heldItemScale: 0.8
+  leftEjectPoint: {fileID: 358198167749589956}
+  rightEjectPoint: {fileID: 8668837333863770794}
+  minThrowForce: 3
+  maxThrowForce: 8
 --- !u!114 &1274077256861787821
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -523,7 +573,7 @@ MonoBehaviour:
   nameplateRoot: {fileID: 2301791019539966925}
   nameText: {fileID: 6810154795380023323}
   hideForLocalPlayer: 1
-  maxVisibleDistance: 30
+  maxVisibleDistance: 20
   faceCamera: 1
   keepUpright: 1
   currentName: Nickname
@@ -678,6 +728,11 @@ MonoBehaviour:
 --- !u!4 &5109118770894592042 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4952750032453338616, guid: 757e198222a17af43a243b993516a699, type: 3}
+  m_PrefabInstance: {fileID: 170168777652854226}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &5638115596135456577 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5503983518300111507, guid: 757e198222a17af43a243b993516a699, type: 3}
   m_PrefabInstance: {fileID: 170168777652854226}
   m_PrefabAsset: {fileID: 0}
 --- !u!81 &5741375404085200143 stripped

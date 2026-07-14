@@ -4,7 +4,7 @@ using UnityEngine;
 public class PickableItem : Interactable
 {
     [Header("Pickup")]
-    [SerializeField] private InventoryItemType itemType = InventoryItemType.Wrench;
+    [SerializeField] private string itemName = "Wrench";
     [SerializeField] private Sprite inventoryIcon;
 
     [Header("Held Visual")]
@@ -17,9 +17,9 @@ public class PickableItem : Interactable
         meshFilter = GetComponentInChildren<MeshFilter>();
     }
 
-    public void Setup(InventoryItemType type, Sprite icon)
+    public void Setup(string name, Sprite icon)
     {
-        itemType = type;
+        itemName = name;
         inventoryIcon = icon;
     }
 
@@ -49,13 +49,14 @@ public class PickableItem : Interactable
         if (heldVisual == null)
             return;
 
-        int slot = inv.AddItem(itemType, inventoryIcon, heldVisual, IsSpawned ? gameObject : null);
+        int slot = inv.AddItem(itemName, inventoryIcon, heldVisual, IsSpawned ? gameObject : null);
         if (slot < 0)
         {
-            if (!IsSpawned)
-                Destroy(heldVisual);
+            Destroy(heldVisual);
             return;
         }
+
+        SetCanInteract(false);
 
         if (IsSpawned)
         {
@@ -88,9 +89,9 @@ public class PickableItem : Interactable
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void DropServerRpc(Vector3 position, Quaternion rotation)
+    public void DropServerRpc(Vector3 position, Quaternion rotation, Vector3 velocity)
     {
-        DropClientRpc(position, rotation);
+        DropClientRpc(position, rotation, velocity);
     }
 
     [ClientRpc]
@@ -100,12 +101,29 @@ public class PickableItem : Interactable
         foreach (var r in renderers) r.enabled = false;
         var colliders = GetComponentsInChildren<Collider>(true);
         foreach (var c in colliders) c.enabled = false;
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.isKinematic = true;
+            rb.useGravity = false;
+        }
     }
 
     [ClientRpc]
-    private void DropClientRpc(Vector3 position, Quaternion rotation)
+    private void DropClientRpc(Vector3 position, Quaternion rotation, Vector3 velocity)
     {
+        SetCanInteract(true);
+
         transform.SetPositionAndRotation(position, rotation);
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = gameObject.AddComponent<Rigidbody>();
+        rb.isKinematic = false;
+        rb.useGravity = true;
+        rb.linearVelocity = velocity;
+
         var renderers = GetComponentsInChildren<Renderer>(true);
         foreach (var r in renderers) r.enabled = true;
         var colliders = GetComponentsInChildren<Collider>(true);

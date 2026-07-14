@@ -4,7 +4,7 @@ public class Inventory : MonoBehaviour
 {
     [SerializeField] private int maxSlots = 3;
 
-    private InventoryItemType[] slots;
+    private string[] slots;
     private Sprite[] slotIcons;
     private GameObject[] slotHeldPrefabs;
     private GameObject[] slotDropPrefabs;
@@ -12,35 +12,35 @@ public class Inventory : MonoBehaviour
 
     public int MaxSlots => maxSlots;
     public int ActiveSlot => activeSlot;
-    public InventoryItemType ActiveItemType => activeSlot >= 0 && activeSlot < slots.Length ? slots[activeSlot] : InventoryItemType.None;
+    public string ActiveItemType => activeSlot >= 0 && activeSlot < slots.Length ? slots[activeSlot] : null;
 
-    public event System.Action<int, InventoryItemType> OnSlotChanged;
+    public event System.Action<int, string> OnSlotChanged;
     public event System.Action<int> OnActiveSlotChanged;
     public event System.Action<int, Sprite> OnSlotIconChanged;
 
     private void Awake()
     {
-        slots = new InventoryItemType[maxSlots];
+        slots = new string[maxSlots];
         slotIcons = new Sprite[maxSlots];
         slotHeldPrefabs = new GameObject[maxSlots];
         slotDropPrefabs = new GameObject[maxSlots];
         activeSlot = -1;
     }
 
-    public int AddItem(InventoryItemType itemType, Sprite icon = null, GameObject heldPrefab = null, GameObject dropPrefab = null)
+    public int AddItem(string itemName, Sprite icon = null, GameObject heldPrefab = null, GameObject dropPrefab = null)
     {
-        if (itemType == InventoryItemType.None)
+        if (string.IsNullOrEmpty(itemName))
             return -1;
 
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] == InventoryItemType.None)
+            if (slots[i] == null)
             {
-                slots[i] = itemType;
+                slots[i] = itemName;
                 slotIcons[i] = icon;
                 slotHeldPrefabs[i] = heldPrefab;
                 slotDropPrefabs[i] = dropPrefab;
-                OnSlotChanged?.Invoke(i, itemType);
+                OnSlotChanged?.Invoke(i, itemName);
                 OnSlotIconChanged?.Invoke(i, icon);
 
                 if (activeSlot < 0)
@@ -91,11 +91,11 @@ public class Inventory : MonoBehaviour
         if (slot < 0 || slot >= slots.Length)
             return;
 
-        slots[slot] = InventoryItemType.None;
+        slots[slot] = null;
         slotIcons[slot] = null;
         slotHeldPrefabs[slot] = null;
         slotDropPrefabs[slot] = null;
-        OnSlotChanged?.Invoke(slot, InventoryItemType.None);
+        OnSlotChanged?.Invoke(slot, null);
         OnSlotIconChanged?.Invoke(slot, null);
 
         if (activeSlot == slot)
@@ -120,7 +120,7 @@ public class Inventory : MonoBehaviour
             return true;
         }
 
-        if (slots[slot] == InventoryItemType.None)
+        if (slots[slot] == null)
         {
             ClearActiveSlot();
             return true;
@@ -142,21 +142,21 @@ public class Inventory : MonoBehaviour
         OnActiveSlotChanged?.Invoke(-1);
     }
 
-    public InventoryItemType GetItemAtSlot(int slot)
+    public string GetItemAtSlot(int slot)
     {
         if (slot < 0 || slot >= slots.Length)
-            return InventoryItemType.None;
+            return null;
 
         return slots[slot];
     }
 
-    public void SetSlotFromNetwork(int slot, InventoryItemType itemType)
+    public void SetSlotFromNetwork(int slot, string itemName)
     {
         if (slot < 0 || slot >= slots.Length)
             return;
 
-        slots[slot] = itemType;
-        OnSlotChanged?.Invoke(slot, itemType);
+        slots[slot] = itemName;
+        OnSlotChanged?.Invoke(slot, itemName);
     }
 
     public void SetActiveSlotFromNetwork(int slot)
@@ -169,7 +169,7 @@ public class Inventory : MonoBehaviour
     {
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] != InventoryItemType.None)
+            if (slots[i] != null)
                 return i;
         }
 
@@ -181,7 +181,7 @@ public class Inventory : MonoBehaviour
         if (newMax <= slots.Length)
             return;
 
-        var newSlots = new InventoryItemType[newMax];
+        var newSlots = new string[newMax];
         var newIcons = new Sprite[newMax];
         var newHeldPrefabs = new GameObject[newMax];
         var newDropPrefabs = new GameObject[newMax];

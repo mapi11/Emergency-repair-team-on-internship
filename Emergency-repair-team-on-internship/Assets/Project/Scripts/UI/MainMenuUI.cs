@@ -27,6 +27,14 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button pasteCodeButton;
     [SerializeField] private Button copyCodeButton;
 
+    [Header("Eyes")]
+    [SerializeField] private RectTransform leftEyeCenter;
+    [SerializeField] private RectTransform rightEyeCenter;
+    [SerializeField] private RectTransform leftPupil;
+    [SerializeField] private RectTransform rightPupil;
+    [SerializeField] private float maxPupilOffset = 10f;
+    [SerializeField] private float eyeTrackingSpeed = 8f;
+
     [Header("Texts")]
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text footerText;
@@ -63,12 +71,48 @@ public class MainMenuUI : MonoBehaviour
         SetStatus(connectionManager.Status);
     }
 
+    private void Update()
+    {
+        UpdateEyes();
+    }
+
     private void OnDestroy()
     {
         if (connectionManager != null)
         {
             connectionManager.StatusChanged -= OnStatusChanged;
         }
+    }
+
+    private void UpdateEyes()
+    {
+        if (leftEyeCenter == null || rightEyeCenter == null || leftPupil == null || rightPupil == null)
+            return;
+
+        MovePupil(leftPupil, leftEyeCenter);
+        MovePupil(rightPupil, rightEyeCenter);
+    }
+
+    private void MovePupil(RectTransform pupil, RectTransform eyeCenter)
+    {
+        Vector3 cursorPos = Input.mousePosition;
+        Vector2 canvasPos;
+        RectTransform canvasRect = eyeCenter.root as RectTransform;
+
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, cursorPos, null, out canvasPos))
+            return;
+
+        Vector2 eyePos = canvasRect.InverseTransformPoint(eyeCenter.position);
+        Vector2 dir = canvasPos - eyePos;
+        float dist = dir.magnitude;
+
+        if (dist > maxPupilOffset)
+            dir = dir.normalized * maxPupilOffset;
+
+        Vector3 targetPos = pupil.localPosition;
+        targetPos.x = dir.x;
+        targetPos.y = dir.y;
+        pupil.localPosition = Vector3.Lerp(pupil.localPosition, targetPos, eyeTrackingSpeed * Time.deltaTime);
     }
 
     private void InitializeFields()

@@ -105,7 +105,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
-    private void OnSlotChanged(int slotIndex, InventoryItemType itemType)
+    private void OnSlotChanged(int slotIndex, string itemName)
     {
         if (slotIndex < 0 || slotIndex >= slots.Length)
             return;
@@ -117,9 +117,9 @@ public class InventoryUI : MonoBehaviour
 
         if (slot.ItemNameTxt != null)
         {
-            slot.ItemNameTxt.text = itemType == InventoryItemType.None
+            slot.ItemNameTxt.text = string.IsNullOrEmpty(itemName)
                 ? (slotIndex + 1).ToString()
-                : ItemDisplayName(itemType);
+                : itemName;
         }
     }
 
@@ -143,7 +143,7 @@ public class InventoryUI : MonoBehaviour
             {
                 slots[i].ObjectImg.color = activeSlotColor;
             }
-            else if (i < inventory.MaxSlots && inventory.GetItemAtSlot(i) == InventoryItemType.None)
+            else if (i < inventory.MaxSlots && inventory.GetItemAtSlot(i) == null)
             {
                 slots[i].ObjectImg.color = emptySlotColor;
             }
@@ -151,15 +151,6 @@ public class InventoryUI : MonoBehaviour
             {
                 slots[i].ObjectImg.color = inactiveSlotColor;
             }
-        }
-    }
-
-    private string ItemDisplayName(InventoryItemType type)
-    {
-        switch (type)
-        {
-            case InventoryItemType.Wrench: return "Wrench";
-            default: return type.ToString();
         }
     }
 }

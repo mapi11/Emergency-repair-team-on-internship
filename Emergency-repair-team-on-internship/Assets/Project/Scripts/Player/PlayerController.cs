@@ -65,6 +65,10 @@ public class PlayerController : MonoBehaviour
     [Header("Crosshair")]
     [SerializeField] private GameObject crosshair;
 
+    [Header("Throw")]
+    [SerializeField] private float maxChargeTime = 2f;
+    [SerializeField] private ChargeSlider chargeSlider;
+
     [Header("Multiplayer")]
     [SerializeField] private bool isLocal = true;
     [SerializeField] private int localOnlyLayer = 6;
@@ -83,6 +87,9 @@ public class PlayerController : MonoBehaviour
     private float pitch;
 
     private bool handReachedInteractable;
+    private bool isChargingThrow;
+    private float throwChargeTime;
+    private NetworkInventorySync cachedSync;
     private float shoulderY;
     private float airborneSquash = 1f;
     private float bodyInitialY;
@@ -452,7 +459,10 @@ public class PlayerController : MonoBehaviour
     private void HandleInventoryInput()
     {
         if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            CancelCharge();
             return;
+        }
 
         if (inventory == null)
             return;
@@ -463,23 +473,79 @@ public class PlayerController : MonoBehaviour
             return;
 
         if (keyboard.digit1Key.wasPressedThisFrame)
-            inventory.SwitchToSlot(0);
-        else if (keyboard.digit2Key.wasPressedThisFrame)
-            inventory.SwitchToSlot(1);
-        else if (keyboard.digit3Key.wasPressedThisFrame)
-            inventory.SwitchToSlot(2);
-        else if (keyboard.digit4Key.wasPressedThisFrame)
-            inventory.SwitchToSlot(3);
-        else if (keyboard.digit5Key.wasPressedThisFrame)
-            inventory.SwitchToSlot(4);
-
-        if (keyboard.qKey.wasPressedThisFrame)
         {
-            NetworkInventorySync sync = GetComponent<NetworkInventorySync>();
-
-            if (sync != null)
-                sync.DropActiveItem();
+            CancelCharge();
+            inventory.SwitchToSlot(0);
         }
+        else if (keyboard.digit2Key.wasPressedThisFrame)
+        {
+            CancelCharge();
+            inventory.SwitchToSlot(1);
+        }
+        else if (keyboard.digit3Key.wasPressedThisFrame)
+        {
+            CancelCharge();
+            inventory.SwitchToSlot(2);
+        }
+        else if (keyboard.digit4Key.wasPressedThisFrame)
+        {
+            CancelCharge();
+            inventory.SwitchToSlot(3);
+        }
+        else if (keyboard.digit5Key.wasPressedThisFrame)
+        {
+            CancelCharge();
+            inventory.SwitchToSlot(4);
+        }
+
+        if (keyboard.qKey.wasPressedThisFrame && !isChargingThrow)
+        {
+            if (inventory.ActiveSlot < 0 || string.IsNullOrEmpty(inventory.ActiveItemType))
+                return;
+
+            isChargingThrow = true;
+            throwChargeTime = 0f;
+
+            if (chargeSlider != null)
+                chargeSlider.Show(0f);
+        }
+        else if (keyboard.qKey.isPressed && isChargingThrow)
+        {
+            throwChargeTime += Time.deltaTime;
+            float normalized = Mathf.Clamp01(throwChargeTime / maxChargeTime);
+
+            if (chargeSlider != null)
+                chargeSlider.UpdateValue(normalized);
+        }
+        else if (keyboard.qKey.wasReleasedThisFrame && isChargingThrow)
+        {
+            isChargingThrow = false;
+            float normalized = Mathf.Clamp01(throwChargeTime / maxChargeTime);
+
+            if (chargeSlider != null)
+                chargeSlider.Hide();
+
+            Vector3 direction = cameraPivot != null ? cameraPivot.forward :
+                                playerCamera != null ? playerCamera.transform.forward : transform.forward;
+
+            if (cachedSync == null)
+                cachedSync = GetComponent<NetworkInventorySync>();
+
+            if (cachedSync != null)
+                cachedSync.LaunchActiveItem(normalized, direction);
+        }
+    }
+
+    private void CancelCharge()
+    {
+        if (!isChargingThrow)
+            return;
+
+        isChargingThrow = false;
+        throwChargeTime = 0f;
+
+        if (chargeSlider != null)
+            chargeSlider.Hide();
     }
 
     private Interactable FindBestInteractable()
@@ -664,6 +730,8 @@ public class PlayerController : MonoBehaviour
             {
                 crosshair.SetActive(false);
             }
+
+            CancelCharge();
         }
         else
         {

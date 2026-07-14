@@ -383,7 +383,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 4.5, y: -2.8}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 16, y: 16}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8732665422116056634
@@ -2304,6 +2304,12 @@ MonoBehaviour:
   joinOnlineButton: {fileID: 7919466403321141720}
   pasteCodeButton: {fileID: 4440431828554305716}
   copyCodeButton: {fileID: 5106916059090414100}
+  leftEyeCenter: {fileID: 5939930694680919584}
+  rightEyeCenter: {fileID: 8595584525576261355}
+  leftPupil: {fileID: 3812977349195770133}
+  rightPupil: {fileID: 1318358635379135500}
+  maxPupilOffset: 10
+  eyeTrackingSpeed: 8
   statusText: {fileID: 8595408816918283496}
   footerText: {fileID: 5964872418410173008}
 --- !u!1001 &200704806520904223
