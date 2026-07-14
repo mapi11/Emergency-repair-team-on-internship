@@ -59,6 +59,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private LayerMask interactableMask = ~0;
     [SerializeField] private float handActivationDistance = 0.12f;
 
+    [Header("Inventory")]
+    [SerializeField] private Inventory inventory;
+
     [Header("Crosshair")]
     [SerializeField] private GameObject crosshair;
 
@@ -95,6 +98,8 @@ public class PlayerController : MonoBehaviour
     public float Pitch => pitch;
     public Interactable CurrentInteractable => currentInteractable;
     public bool HasCurrentInteractable => currentInteractable != null;
+    public Inventory PlayerInventory => inventory;
+    public Transform ActiveHandHoldPivot => InteractionHandRef != null ? InteractionHandRef.HoldPivot : null;
 
     private void Awake()
     {
@@ -160,6 +165,7 @@ public class PlayerController : MonoBehaviour
         HandleCrouch();
         HandleMovement();
         HandleInteraction();
+        HandleInventoryInput();
         UpdateCrosshair();
     }
 
@@ -440,6 +446,39 @@ public class PlayerController : MonoBehaviour
         if (hand != null)
         {
             hand.ClearTarget();
+        }
+    }
+
+    private void HandleInventoryInput()
+    {
+        if (Cursor.lockState != CursorLockMode.Locked)
+            return;
+
+        if (inventory == null)
+            return;
+
+        Keyboard keyboard = Keyboard.current;
+
+        if (keyboard == null)
+            return;
+
+        if (keyboard.digit1Key.wasPressedThisFrame)
+            inventory.SwitchToSlot(0);
+        else if (keyboard.digit2Key.wasPressedThisFrame)
+            inventory.SwitchToSlot(1);
+        else if (keyboard.digit3Key.wasPressedThisFrame)
+            inventory.SwitchToSlot(2);
+        else if (keyboard.digit4Key.wasPressedThisFrame)
+            inventory.SwitchToSlot(3);
+        else if (keyboard.digit5Key.wasPressedThisFrame)
+            inventory.SwitchToSlot(4);
+
+        if (keyboard.qKey.wasPressedThisFrame)
+        {
+            NetworkInventorySync sync = GetComponent<NetworkInventorySync>();
+
+            if (sync != null)
+                sync.DropActiveItem();
         }
     }
 

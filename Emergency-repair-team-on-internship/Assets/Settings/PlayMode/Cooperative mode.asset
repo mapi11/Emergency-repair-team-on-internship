@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a689d91966dfb46499fb63f130d9b905, type: 3}
-  m_Name: Main Editor Player
+  m_Name: Cooperative mode
   m_EditorClassIdentifier: 
   m_Description: 
   m_EnableEditors: 1
@@ -43,16 +43,6 @@ MonoBehaviour:
     m_AdvancedConfiguration:
       StreamLogsToMainEditor: 0
       LogsColor: {r: 0.478705, g: 0.36470592, b: 0.8666667, a: 1}
-  - Name: Player 4
-    <CorrespondingNodeId>k__BackingField: Player 4|3_run
-    m_Nodes:
-    - Player 4|3_run
-    - Player 4|3_deploy
-    m_PlayerTag: 
-    m_InitialScene: {fileID: 0}
-    m_AdvancedConfiguration:
-      StreamLogsToMainEditor: 0
-      LogsColor: {r: 0.36470592, g: 0.8666667, b: 0.8522004, a: 1}
   m_LocalInstances: []
   m_OverridePort: 0
   m_Port: 0

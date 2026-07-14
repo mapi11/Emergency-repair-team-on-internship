@@ -28,6 +28,9 @@ public class Hand : MonoBehaviour
     [SerializeField] private Transform shoulder;
     [SerializeField] private LineRenderer armLine;
 
+    [Header("Item Hold")]
+    [SerializeField] private Transform holdPivot;
+
     [Header("Debug")]
     [SerializeField] private bool hasTarget;
     [SerializeField] private Transform target;
@@ -41,6 +44,8 @@ public class Hand : MonoBehaviour
     private Vector3 previousFollowRootPosition;
     private float swingTime;
     private Vector3 smoothedVelocity;
+
+    public Transform HoldPivot => holdPivot;
 
     private Quaternion GetYawRotation()
     {
