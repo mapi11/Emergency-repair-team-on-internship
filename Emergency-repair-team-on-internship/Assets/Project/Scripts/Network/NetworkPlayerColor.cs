@@ -36,8 +36,6 @@ public class NetworkPlayerColor : NetworkBehaviour
 
         if (IsOwner)
         {
-            LocalPlayerSettings.Load();
-
             int packedColor = LocalPlayerSettings.PackColor(LocalPlayerSettings.PlayerColor);
 
             if (IsServer)

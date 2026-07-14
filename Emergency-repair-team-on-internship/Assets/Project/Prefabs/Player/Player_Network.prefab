@@ -217,6 +217,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 427638933326144046, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1221688299579084739, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -297,6 +301,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Eye_R
       objectReference: {fileID: 0}
+    - target: {fileID: 4439186504835526549, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4866531798986619005, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: far clip plane
+      value: 100
+      objectReference: {fileID: 0}
     - target: {fileID: 4866531798986619005, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: near clip plane
       value: 0.21
@@ -326,6 +338,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
       addedObject: {fileID: 840230281053165502}
+    - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 531451484446258612}
     - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4547687082813629006}
@@ -422,6 +437,24 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
+--- !u!114 &531451484446258612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1156839613533151179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 92ea92c59950d7b4cb639c4cc1bb85f5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ShowTopMostFoldoutHeaderGroup: 1
+  lobbySceneName: LobbyScene
+  teleportDelay: 0.1
+  teleportOnlyOwner: 1
+  hasTeleported: 0
+  lastTeleportPosition: {x: 0, y: 0, z: 0}
 --- !u!114 &4547687082813629006
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -558,6 +591,8 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   playerController: {fileID: 3344870759466545871}
   sendInterval: 0.05
+  minPitchDifferenceToSend: 0.15
+  remotePitchSmooth: 18
 --- !u!4 &1344536226991297041 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1221688299579084739, guid: 757e198222a17af43a243b993516a699, type: 3}

@@ -151,6 +151,11 @@ public class PlayerController : MonoBehaviour
         if (!isLocal)
             return;
 
+        HandleCursorEscape();
+
+        if (Cursor.lockState != CursorLockMode.Locked)
+            return;
+
         HandleLook();
         HandleArms();
         HandleCrouch();
@@ -593,6 +598,38 @@ public class PlayerController : MonoBehaviour
         for (int i = 0; i < obj.childCount; i++)
         {
             SetLayerRecursively(obj.GetChild(i), layer);
+        }
+    }
+
+    private void HandleCursorEscape()
+    {
+        if (Keyboard.current == null)
+            return;
+
+        if (!Keyboard.current.escapeKey.wasPressedThisFrame)
+            return;
+
+        bool cursorIsLocked = Cursor.lockState == CursorLockMode.Locked;
+
+        if (cursorIsLocked)
+        {
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
+
+            if (crosshair != null)
+            {
+                crosshair.SetActive(false);
+            }
+        }
+        else
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+
+            if (crosshair != null)
+            {
+                crosshair.SetActive(true);
+            }
         }
     }
 
