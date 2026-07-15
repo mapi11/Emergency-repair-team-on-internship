@@ -9,9 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7893104440123759046}
+  - component: {fileID: 6103584566409608796}
   - component: {fileID: 808609364254247287}
   - component: {fileID: 2072635189322038350}
-  - component: {fileID: 9077352501838046392}
+  - component: {fileID: 2556753375831025434}
   m_Layer: 0
   m_Name: NetworkBootstrap
   m_TagString: Untagged
@@ -34,6 +35,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &6103584566409608796
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7645746893127696775}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07421d9924d77be41a91b83f557fedf5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  pushToTalkKey: 36
+  recordingLengthSeconds: 10
+  chunkMilliseconds: 20
+  maxPacketBytes: 4096
+  micStarted: 0
+  isTalking: 0
+  currentMicrophoneName: 
+  sampleRate: 0
+  chunkSamples: 0
+  lastAmplitude: 0
 --- !u!114 &808609364254247287
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -108,7 +131,7 @@ MonoBehaviour:
     PacketDelayMS: 0
     PacketJitterMS: 0
     PacketDropRate: 0
---- !u!114 &9077352501838046392
+--- !u!114 &2556753375831025434
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -117,16 +140,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 7645746893127696775}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8731dcdd1a3f1994584df51bd6b92870, type: 3}
+  m_Script: {fileID: 11500000, guid: f614941949ada694e96917223cf0d627, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lobbySceneName: LobbyScene
   address: 127.0.0.1
   port: 7777
   maxPlayers: 4
-  relayJoinCode: 
-  relayConnectionType: wss
-  profileId: Host
-  playerName: Player
+  relayConnectionType: dtls
+  clientConnectTimeout: 45
   isBusy: 0
   status: Offline
-  clientConnectTimeout: 45
+  currentJoinCode: 

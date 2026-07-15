@@ -14,6 +14,11 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private TMP_Dropdown colorDropdown;
     [SerializeField] private TMP_Dropdown handDropdown;
 
+    [Header("Voice")]
+    [SerializeField] private TMP_Dropdown microphoneDropdown;
+    [SerializeField] private Button refreshMicrophonesButton;
+    [SerializeField] private TMP_Text microphoneText;
+
     [Header("Local")]
     [SerializeField] private TMP_InputField addressInput;
     [SerializeField] private TMP_InputField portInput;
@@ -142,6 +147,7 @@ public class MainMenuUI : MonoBehaviour
 
         InitColorDropdown();
         InitHandDropdown();
+        InitMicrophoneDropdown();
     }
 
     private void InitColorDropdown()
@@ -223,6 +229,11 @@ public class MainMenuUI : MonoBehaviour
         if (copyCodeButton != null)
         {
             copyCodeButton.onClick.AddListener(OnCopyCodeClicked);
+        }
+
+        if (refreshMicrophonesButton != null)
+        {
+            refreshMicrophonesButton.onClick.AddListener(InitMicrophoneDropdown);
         }
     }
 
@@ -316,6 +327,101 @@ public class MainMenuUI : MonoBehaviour
         }
 
         connectionManager.SetLocalConnectionData(address, port);
+    }
+
+    private void InitMicrophoneDropdown()
+    {
+        if (microphoneDropdown == null)
+            return;
+
+        VoiceChatSettings.Load();
+
+        microphoneDropdown.onValueChanged.RemoveListener(OnMicrophoneChanged);
+        microphoneDropdown.ClearOptions();
+
+        string[] devices = Microphone.devices;
+
+        if (devices == null || devices.Length == 0)
+        {
+            microphoneDropdown.AddOptions(new System.Collections.Generic.List<string>
+        {
+            "No microphones found"
+        });
+
+            microphoneDropdown.interactable = false;
+
+            if (microphoneText != null)
+            {
+                microphoneText.text = "Microphone: not found";
+            }
+
+            VoiceChatSettings.SetSelectedMicrophone("");
+            return;
+        }
+
+        microphoneDropdown.interactable = true;
+
+        System.Collections.Generic.List<string> options = new System.Collections.Generic.List<string>();
+
+        for (int i = 0; i < devices.Length; i++)
+        {
+            options.Add(devices[i]);
+        }
+
+        microphoneDropdown.AddOptions(options);
+
+        int selectedIndex = 0;
+
+        string savedMicrophone = VoiceChatSettings.SelectedMicrophoneName;
+
+        for (int i = 0; i < devices.Length; i++)
+        {
+            if (devices[i] == savedMicrophone)
+            {
+                selectedIndex = i;
+                break;
+            }
+        }
+
+        microphoneDropdown.SetValueWithoutNotify(selectedIndex);
+
+        VoiceChatSettings.SetSelectedMicrophone(devices[selectedIndex]);
+
+        RefreshMicrophoneText();
+
+        microphoneDropdown.onValueChanged.AddListener(OnMicrophoneChanged);
+    }
+
+    private void OnMicrophoneChanged(int index)
+    {
+        string[] devices = Microphone.devices;
+
+        if (devices == null || devices.Length == 0)
+            return;
+
+        if (index < 0 || index >= devices.Length)
+            return;
+
+        VoiceChatSettings.SetSelectedMicrophone(devices[index]);
+
+        RefreshMicrophoneText();
+    }
+
+    private void RefreshMicrophoneText()
+    {
+        if (microphoneText == null)
+            return;
+
+        string microphoneName = VoiceChatSettings.SelectedMicrophoneName;
+
+        if (string.IsNullOrWhiteSpace(microphoneName))
+        {
+            microphoneText.text = "Microphone: not selected";
+        }
+        else
+        {
+            microphoneText.text = $"Microphone: {microphoneName}";
+        }
     }
 
     private string GetProfileId()

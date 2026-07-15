@@ -387,6 +387,9 @@ public class PlayerController : MonoBehaviour
             currentInteractable = FindBestInteractable();
             handReachedInteractable = false;
 
+            if (currentInteractable != null && IsInventoryFull())
+                currentInteractable = null;
+
             Hand hand = InteractionHandRef;
             if (currentInteractable != null && hand != null)
             {
@@ -437,6 +440,20 @@ public class PlayerController : MonoBehaviour
         {
             StopInteraction();
         }
+    }
+
+    private bool IsInventoryFull()
+    {
+        if (inventory == null)
+            return true;
+
+        for (int i = 0; i < inventory.MaxSlots; i++)
+        {
+            if (inventory.GetItemAtSlot(i) == null)
+                return false;
+        }
+
+        return true;
     }
 
     private void StopInteraction()
