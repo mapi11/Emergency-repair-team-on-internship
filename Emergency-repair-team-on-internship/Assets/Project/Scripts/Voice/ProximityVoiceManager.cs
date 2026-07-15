@@ -19,6 +19,8 @@ public class ProximityVoiceManager : MonoBehaviour
     [Header("Network")]
     [SerializeField] private int maxPacketBytes = 1000;
 
+    public static ProximityVoiceManager Instance { get; private set; }
+
     [Header("Debug")]
     [SerializeField] private bool micStarted;
     [SerializeField] private bool isTalking;
@@ -33,6 +35,26 @@ public class ProximityVoiceManager : MonoBehaviour
     private byte[] sendBuffer;
 
     private bool handlersRegistered;
+
+    private void Awake()
+    {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        Instance = this;
+    }
+
+    private void OnDestroy()
+    {
+        StopMicrophone();
+        UnregisterMessageHandlers();
+
+        if (Instance == this)
+            Instance = null;
+    }
 
     private void Update()
     {
@@ -65,12 +87,6 @@ public class ProximityVoiceManager : MonoBehaviour
         }
 
         CaptureAndSendVoice();
-    }
-
-    private void OnDestroy()
-    {
-        StopMicrophone();
-        UnregisterMessageHandlers();
     }
 
     private void EnsureMicrophoneStarted()
@@ -148,6 +164,13 @@ public class ProximityVoiceManager : MonoBehaviour
         micStarted = false;
 
         Debug.Log("🎙 Microphone stopped");
+    }
+
+    public void RestartMicrophone()
+    {
+        StopMicrophone();
+        micStarted = false;
+        microphoneReadPosition = 0;
     }
 
     private void CaptureAndSendVoice()

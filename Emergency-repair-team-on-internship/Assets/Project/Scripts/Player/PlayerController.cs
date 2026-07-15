@@ -11,7 +11,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Camera playerCamera;
 
     [Tooltip("Для New Input System нормальные значения: 0.04 - 0.15")]
-    [SerializeField] private float mouseSensitivity = 0.08f;
+    [SerializeField] public float mouseSensitivity = 0.08f;
+
+    public bool IsPaused { get; set; }
 
     [SerializeField] private float minPitch = -80f;
     [SerializeField] private float maxPitch = 80f;
@@ -110,6 +112,11 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        float savedSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", -1f);
+
+        if (savedSensitivity >= 0f)
+            mouseSensitivity = savedSensitivity;
+
         characterController = GetComponent<CharacterController>();
         rb = GetComponent<Rigidbody>();
 
@@ -730,6 +737,9 @@ public class PlayerController : MonoBehaviour
 
     private void HandleCursorEscape()
     {
+        if (IsPaused)
+            return;
+
         if (Keyboard.current == null)
             return;
 
