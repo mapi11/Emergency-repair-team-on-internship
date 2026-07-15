@@ -32,14 +32,6 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private Button pasteCodeButton;
     [SerializeField] private Button copyCodeButton;
 
-    [Header("Eyes")]
-    [SerializeField] private RectTransform leftEyeCenter;
-    [SerializeField] private RectTransform rightEyeCenter;
-    [SerializeField] private RectTransform leftPupil;
-    [SerializeField] private RectTransform rightPupil;
-    [SerializeField] private float maxPupilOffset = 10f;
-    [SerializeField] private float eyeTrackingSpeed = 8f;
-
     [Header("Texts")]
     [SerializeField] private TMP_Text statusText;
     [SerializeField] private TMP_Text footerText;
@@ -76,48 +68,12 @@ public class MainMenuUI : MonoBehaviour
         SetStatus(connectionManager.Status);
     }
 
-    private void Update()
-    {
-        UpdateEyes();
-    }
-
     private void OnDestroy()
     {
         if (connectionManager != null)
         {
             connectionManager.StatusChanged -= OnStatusChanged;
         }
-    }
-
-    private void UpdateEyes()
-    {
-        if (leftEyeCenter == null || rightEyeCenter == null || leftPupil == null || rightPupil == null)
-            return;
-
-        MovePupil(leftPupil, leftEyeCenter);
-        MovePupil(rightPupil, rightEyeCenter);
-    }
-
-    private void MovePupil(RectTransform pupil, RectTransform eyeCenter)
-    {
-        Vector3 cursorPos = Input.mousePosition;
-        Vector2 canvasPos;
-        RectTransform canvasRect = eyeCenter.root as RectTransform;
-
-        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, cursorPos, null, out canvasPos))
-            return;
-
-        Vector2 eyePos = canvasRect.InverseTransformPoint(eyeCenter.position);
-        Vector2 dir = canvasPos - eyePos;
-        float dist = dir.magnitude;
-
-        if (dist > maxPupilOffset)
-            dir = dir.normalized * maxPupilOffset;
-
-        Vector3 targetPos = pupil.localPosition;
-        targetPos.x = dir.x;
-        targetPos.y = dir.y;
-        pupil.localPosition = Vector3.Lerp(pupil.localPosition, targetPos, eyeTrackingSpeed * Time.deltaTime);
     }
 
     private void InitializeFields()
@@ -127,7 +83,18 @@ public class MainMenuUI : MonoBehaviour
         LocalPlayerSettings.Load(profileId);
         selectedColor = LocalPlayerSettings.PlayerColor;
 
-        GameSessionData.SelectedColorIndex = PlayerPrefs.GetInt($"PlayerColorIndex_{LocalPlayerSettings.ProfileId}", 0);
+        int savedIndex = PlayerPrefs.GetInt($"PlayerColorIndex_{LocalPlayerSettings.ProfileId}", -1);
+
+        if (savedIndex >= 0 && savedIndex < GameSessionData.ColorValues.Length &&
+            ColorsMatch(GameSessionData.ColorValues[savedIndex], selectedColor))
+        {
+            GameSessionData.SelectedColorIndex = savedIndex;
+        }
+        else
+        {
+            GameSessionData.SelectedColorIndex = FindColorIndex(selectedColor);
+        }
+
         GameSessionData.SelectedHandIndex = PlayerPrefs.GetInt($"PlayerHandIndex_{LocalPlayerSettings.ProfileId}", 0);
 
         if (playerNameInput != null)
@@ -488,5 +455,21 @@ public class MainMenuUI : MonoBehaviour
         {
             statusText.text = $"Status: {value}";
         }
+    }
+
+    private static bool ColorsMatch(Color32 a, Color32 b)
+    {
+        return a.r == b.r && a.g == b.g && a.b == b.b && a.a == b.a;
+    }
+
+    private static int FindColorIndex(Color32 color)
+    {
+        for (int i = 0; i < GameSessionData.ColorValues.Length; i++)
+        {
+            if (ColorsMatch(GameSessionData.ColorValues[i], color))
+                return i;
+        }
+
+        return 0;
     }
 }

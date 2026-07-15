@@ -568,6 +568,7 @@ GameObject:
   - component: {fileID: 4992159865271649966}
   - component: {fileID: 6864721311474676178}
   - component: {fileID: 903158191287959903}
+  - component: {fileID: 1632966374408209366}
   m_Layer: 5
   m_Name: ColorPreview
   m_TagString: Untagged
@@ -635,6 +636,24 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1632966374408209366
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1890473214859595509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2d77b1ef764b544daf4171db669a908, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  leftEyeCenter: {fileID: 5939930694680919584}
+  rightEyeCenter: {fileID: 8595584525576261355}
+  leftPupil: {fileID: 3812977349195770133}
+  rightPupil: {fileID: 1318358635379135500}
+  maxPupilOffset: 10
+  eyeTrackingSpeed: 8
 --- !u!1 &2138002797165965501
 GameObject:
   m_ObjectHideFlags: 0
@@ -1368,8 +1387,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 60}
+  m_AnchoredPosition: {x: 0, y: 10}
+  m_SizeDelta: {x: 0, y: 50}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &8948170505979902715
 CanvasRenderer:
@@ -1430,7 +1449,7 @@ MonoBehaviour:
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
-  m_fontSizeMin: 18
+  m_fontSizeMin: 6
   m_fontSizeMax: 18
   m_fontStyle: 0
   m_HorizontalAlignment: 2
@@ -2446,12 +2465,6 @@ MonoBehaviour:
   joinOnlineButton: {fileID: 7919466403321141720}
   pasteCodeButton: {fileID: 4440431828554305716}
   copyCodeButton: {fileID: 5106916059090414100}
-  leftEyeCenter: {fileID: 5939930694680919584}
-  rightEyeCenter: {fileID: 8595584525576261355}
-  leftPupil: {fileID: 3812977349195770133}
-  rightPupil: {fileID: 1318358635379135500}
-  maxPupilOffset: 10
-  eyeTrackingSpeed: 8
   statusText: {fileID: 8595408816918283496}
   footerText: {fileID: 5964872418410173008}
 --- !u!1001 &200704806520904223

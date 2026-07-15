@@ -49,8 +49,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pushToTalkKey: 36
   recordingLengthSeconds: 10
-  chunkMilliseconds: 20
-  maxPacketBytes: 4096
+  chunkMilliseconds: 10
+  maxPacketBytes: 1000
   micStarted: 0
   isTalking: 0
   currentMicrophoneName: 

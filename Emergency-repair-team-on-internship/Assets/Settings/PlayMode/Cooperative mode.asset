@@ -42,7 +42,7 @@ MonoBehaviour:
     m_InitialScene: {fileID: 0}
     m_AdvancedConfiguration:
       StreamLogsToMainEditor: 0
-      LogsColor: {r: 0.478705, g: 0.36470592, b: 0.8666667, a: 1}
+      LogsColor: {r: 0.36470592, g: 0.41233465, b: 0.8666667, a: 1}
   m_LocalInstances: []
   m_OverridePort: 0
   m_Port: 0

@@ -172,7 +172,7 @@ public class PlayerController : MonoBehaviour
         if (!isLocal)
             return;
 
-        HandleCursorEscape();
+        //HandleCursorEscape();
 
         HandleLook();
         HandleArms();

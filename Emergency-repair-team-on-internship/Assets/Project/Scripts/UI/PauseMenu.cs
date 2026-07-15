@@ -6,13 +6,14 @@ public class PauseMenu : MonoBehaviour
     public static PauseMenu Instance { get; private set; }
 
     [SerializeField] private GameObject pausePanelPrefab;
-    [SerializeField] private GameObject settingsPanelPrefab;
     [SerializeField] private Transform pauseSpawnPoint;
+    [SerializeField] private GameObject settingsPanelPrefab;
     [SerializeField] private Transform settingsSpawnPoint;
 
     private GameObject pauseInstance;
     private GameObject settingsInstance;
     private PlayerController playerController;
+    private bool returningToMenu;
 
     public bool IsOpen { get; private set; }
     public bool SettingsOpen { get; private set; }
@@ -27,16 +28,36 @@ public class PauseMenu : MonoBehaviour
 
         Instance = this;
         playerController = GetLocalPlayerController();
+
+        if (NetworkManager.Singleton != null)
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnDisconnected;
     }
 
     private void OnDestroy()
     {
         if (Instance == this)
+        {
+            if (NetworkManager.Singleton != null)
+                NetworkManager.Singleton.OnClientDisconnectCallback -= OnDisconnected;
+
             Instance = null;
+        }
     }
 
     private void Update()
     {
+        if (returningToMenu)
+            return;
+
+        if (NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.IsClient &&
+            !NetworkManager.Singleton.IsConnectedClient &&
+            !NetworkManager.Singleton.IsServer)
+        {
+            ReturnToMainMenu();
+            return;
+        }
+
         if (!Input.GetKeyDown(KeyCode.Escape))
             return;
 
@@ -52,6 +73,17 @@ public class PauseMenu : MonoBehaviour
             OpenPause();
     }
 
+    private void OnDisconnected(ulong clientId)
+    {
+        if (returningToMenu)
+            return;
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsServer)
+            return;
+
+        ReturnToMainMenu();
+    }
+
     public void OpenPause()
     {
         if (pauseInstance != null)
@@ -65,7 +97,10 @@ public class PauseMenu : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        Transform parent = pauseSpawnPoint != null ? pauseSpawnPoint : transform;
+        Transform parent = pauseSpawnPoint != null && pauseSpawnPoint.gameObject.activeInHierarchy
+            ? pauseSpawnPoint
+            : transform;
+
         pauseInstance = Instantiate(pausePanelPrefab, parent);
     }
 
@@ -135,6 +170,11 @@ public class PauseMenu : MonoBehaviour
 
     public void ReturnToMainMenu()
     {
+        if (returningToMenu)
+            return;
+
+        returningToMenu = true;
+
         if (playerController != null)
             playerController.IsPaused = false;
 

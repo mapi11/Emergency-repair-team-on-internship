@@ -127,14 +127,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 6103584566409608796, guid: e1af962457e4b7b449c157ef86f4a12c, type: 3}
-      propertyPath: maxPacketBytes
-      value: 1000
-      objectReference: {fileID: 0}
-    - target: {fileID: 6103584566409608796, guid: e1af962457e4b7b449c157ef86f4a12c, type: 3}
-      propertyPath: chunkMilliseconds
-      value: 10
-      objectReference: {fileID: 0}
     - target: {fileID: 7645746893127696775, guid: e1af962457e4b7b449c157ef86f4a12c, type: 3}
       propertyPath: m_Name
       value: NetworkBootstrap
@@ -305,68 +297,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
---- !u!1 &1031128450
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1031128452}
-  - component: {fileID: 1031128451}
-  m_Layer: 0
-  m_Name: VoiceChatManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 2974397684917235467, guid: 0000000000000000d000000000000000, type: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1031128451
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1031128450}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d5670ec3ff8f6cb41b6dc3f52fb127c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sampleRate: 16000
-  sendInterval: 0.04
-  micVolume: 0.8
-  playbackBufferLength: 5
-  spatialMinDistance: 0.5
-  spatialMaxDistance: 20
-  pushToTalkKey: 118
-  localEchoTest: 0
-  logAmplitude: 0
-  micClip: {fileID: 0}
-  micDeviceName: 
-  micStarted: 0
-  micLastSample: 0
-  sendTimer: 0
-  handlerRegistered: 0
-  wasPressing: 0
-  localAmplitude: 0
-  <Amplitude>k__BackingField: 0
---- !u!4 &1031128452
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1031128450}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 6, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2086354674
 GameObject:
   m_ObjectHideFlags: 0
@@ -591,6 +521,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2379420223427692107, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 2920480843839608001, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
       propertyPath: m_Pivot.x
       value: 0
@@ -671,21 +605,13 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 3959963513875724048, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 50
-      objectReference: {fileID: 0}
-    - target: {fileID: 3959963513875724048, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 10
-      objectReference: {fileID: 0}
     - target: {fileID: 5883614785666581365, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
       propertyPath: m_Name
       value: MainMenuCanvas
       objectReference: {fileID: 0}
-    - target: {fileID: 6822254173166717526, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
-      propertyPath: m_text
-      value: Right
+    - target: {fileID: 6822254173788412093, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8840897763652883634, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
       propertyPath: m_AnchorMax.x
@@ -707,10 +633,6 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8937139244555163949, guid: 1def75c2af8c26e4582c5107abfa6a90, type: 3}
-      propertyPath: m_fontSizeMin
-      value: 6
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -725,4 +647,3 @@ SceneRoots:
   - {fileID: 2086354677}
   - {fileID: 2896340701158042966}
   - {fileID: 265500485}
-  - {fileID: 1031128452}
