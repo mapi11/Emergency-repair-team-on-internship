@@ -1116,6 +1116,10 @@ PrefabInstance:
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7081840893024566376, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
+      propertyPath: m_text
+      value: Overall volume
+      objectReference: {fileID: 0}
     - target: {fileID: 7081840893373687796, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -1400,6 +1404,10 @@ PrefabInstance:
     - target: {fileID: 7081840893004531709, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
       propertyPath: m_AnchorMin.x
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7081840893024566376, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
+      propertyPath: m_text
+      value: Mouse sensitivity
       objectReference: {fileID: 0}
     - target: {fileID: 7081840893373687796, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
       propertyPath: m_AnchorMax.x

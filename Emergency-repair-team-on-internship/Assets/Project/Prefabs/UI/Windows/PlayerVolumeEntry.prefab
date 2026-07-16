@@ -891,6 +891,10 @@ PrefabInstance:
       propertyPath: m_AnchorMin.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7081840893024566376, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
+      propertyPath: m_text
+      value: Voice
+      objectReference: {fileID: 0}
     - target: {fileID: 7081840893373687796, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0

@@ -12,6 +12,7 @@ public class InventoryUI : MonoBehaviour
     [SerializeField] private Color activeSlotColor = Color.white;
     [SerializeField] private Color inactiveSlotColor = new Color(0.3f, 0.3f, 0.3f, 0.8f);
     [SerializeField] private Color emptySlotColor = new Color(0.15f, 0.15f, 0.15f, 0.5f);
+    [SerializeField] private Color lockedSlotColor = new Color(0.65f, 0.65f, 0.65f, 1f);
 
     private InventorySlot[] slots;
 
@@ -19,33 +20,19 @@ public class InventoryUI : MonoBehaviour
     {
         if (inventory == null)
         {
-            if (Unity.Netcode.NetworkManager.Singleton != null && Unity.Netcode.NetworkManager.Singleton.IsClient)
-            {
-                var localObj = Unity.Netcode.NetworkManager.Singleton.LocalClient?.PlayerObject;
-                if (localObj != null)
-                    inventory = localObj.GetComponent<Inventory>();
-            }
+            Inventory localInv = FindLocalPlayerInventory();
 
-            if (inventory == null)
+            if (localInv != null)
+                inventory = localInv;
+            else
                 inventory = FindFirstObjectByType<Inventory>();
         }
-    }
-
-    private Inventory FindLocalPlayerInventory()
-    {
-        var net = Unity.Netcode.NetworkManager.Singleton;
-        if (net != null && net.IsClient)
-        {
-            var localObj = net.LocalClient?.PlayerObject;
-            if (localObj != null)
-                return localObj.GetComponent<Inventory>();
-        }
-        return null;
     }
 
     private void Start()
     {
         Inventory localInv = FindLocalPlayerInventory();
+
         if (localInv != null)
             inventory = localInv;
 
@@ -53,14 +40,17 @@ public class InventoryUI : MonoBehaviour
             return;
 
         CreateSlots();
+
         inventory.OnSlotChanged += OnSlotChanged;
         inventory.OnActiveSlotChanged += OnActiveSlotChanged;
         inventory.OnSlotIconChanged += OnSlotIconChanged;
+        inventory.OnSlotLockChanged += OnSlotLockChanged;
 
         for (int i = 0; i < inventory.MaxSlots; i++)
         {
             OnSlotChanged(i, inventory.GetItemAtSlot(i));
             OnSlotIconChanged(i, inventory.GetSlotIcon(i));
+            OnSlotLockChanged(i, inventory.IsSlotLocked(i));
         }
 
         OnActiveSlotChanged(inventory.ActiveSlot);
@@ -74,6 +64,22 @@ public class InventoryUI : MonoBehaviour
         inventory.OnSlotChanged -= OnSlotChanged;
         inventory.OnActiveSlotChanged -= OnActiveSlotChanged;
         inventory.OnSlotIconChanged -= OnSlotIconChanged;
+        inventory.OnSlotLockChanged -= OnSlotLockChanged;
+    }
+
+    private Inventory FindLocalPlayerInventory()
+    {
+        var net = Unity.Netcode.NetworkManager.Singleton;
+
+        if (net != null && net.IsClient)
+        {
+            var localObj = net.LocalClient?.PlayerObject;
+
+            if (localObj != null)
+                return localObj.GetComponent<Inventory>();
+        }
+
+        return null;
     }
 
     private void CreateSlots()
@@ -101,6 +107,9 @@ public class InventoryUI : MonoBehaviour
             if (slot.ItemNameTxt != null)
                 slot.ItemNameTxt.text = (i + 1).ToString();
 
+            if (slot.LockImg != null)
+                slot.LockImg.enabled = false;
+
             slots[i] = slot;
         }
     }
@@ -121,36 +130,87 @@ public class InventoryUI : MonoBehaviour
                 ? (slotIndex + 1).ToString()
                 : itemName;
         }
+
+        RefreshSlotColor(slotIndex);
     }
 
     private void OnSlotIconChanged(int slotIndex, Sprite icon)
     {
-        if (slotIndex < 0 || slotIndex >= slots.Length || slots[slotIndex] == null || slots[slotIndex].ObjectImg == null)
+        if (slotIndex < 0 || slotIndex >= slots.Length)
             return;
 
-        slots[slotIndex].ObjectImg.sprite = icon;
-        slots[slotIndex].ObjectImg.enabled = icon != null;
+        InventorySlot slot = slots[slotIndex];
+
+        if (slot == null || slot.ObjectImg == null)
+            return;
+
+        slot.ObjectImg.sprite = icon;
+        slot.ObjectImg.enabled = icon != null;
+
+        RefreshSlotColor(slotIndex);
+    }
+
+    private void OnSlotLockChanged(int slotIndex, bool locked)
+    {
+        if (slotIndex < 0 || slotIndex >= slots.Length)
+            return;
+
+        InventorySlot slot = slots[slotIndex];
+
+        if (slot == null)
+            return;
+
+        if (slot.LockImg != null)
+            slot.LockImg.enabled = locked;
+
+        RefreshSlotColor(slotIndex);
     }
 
     private void OnActiveSlotChanged(int slotIndex)
     {
+        if (slots == null)
+            return;
+
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] == null || slots[i].ObjectImg == null)
-                continue;
-
-            if (i == slotIndex)
-            {
-                slots[i].ObjectImg.color = activeSlotColor;
-            }
-            else if (i < inventory.MaxSlots && inventory.GetItemAtSlot(i) == null)
-            {
-                slots[i].ObjectImg.color = emptySlotColor;
-            }
-            else
-            {
-                slots[i].ObjectImg.color = inactiveSlotColor;
-            }
+            RefreshSlotColor(i);
         }
+    }
+
+    private void RefreshSlotColor(int slotIndex)
+    {
+        if (inventory == null)
+            return;
+
+        if (slots == null)
+            return;
+
+        if (slotIndex < 0 || slotIndex >= slots.Length)
+            return;
+
+        InventorySlot slot = slots[slotIndex];
+
+        if (slot == null || slot.ObjectImg == null)
+            return;
+
+        if (inventory.IsSlotLocked(slotIndex))
+        {
+            slot.ObjectImg.color = lockedSlotColor;
+            return;
+        }
+
+        if (slotIndex == inventory.ActiveSlot)
+        {
+            slot.ObjectImg.color = activeSlotColor;
+            return;
+        }
+
+        if (inventory.GetItemAtSlot(slotIndex) == null)
+        {
+            slot.ObjectImg.color = emptySlotColor;
+            return;
+        }
+
+        slot.ObjectImg.color = inactiveSlotColor;
     }
 }

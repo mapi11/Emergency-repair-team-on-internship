@@ -25,21 +25,29 @@ public class NetworkInventorySync : NetworkBehaviour
     [SerializeField] private float throwBlockCheckRadius = 0.15f;
     [SerializeField] private LayerMask throwBlockMask = ~0;
 
-    private readonly NetworkVariable<int> networkActiveSlot = new(-1,
+    private readonly NetworkVariable<int> networkActiveSlot = new(
+        -1,
         NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server);
+        NetworkVariableWritePermission.Server
+    );
 
-    private readonly NetworkVariable<FixedString32Bytes> networkActiveItemName = new(new FixedString32Bytes(""),
+    private readonly NetworkVariable<FixedString32Bytes> networkActiveItemName = new(
+        new FixedString32Bytes(""),
         NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server);
+        NetworkVariableWritePermission.Server
+    );
 
-    private readonly NetworkVariable<byte> networkActiveHand = new(0,
+    private readonly NetworkVariable<byte> networkActiveHand = new(
+        0,
         NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server);
+        NetworkVariableWritePermission.Server
+    );
 
-    private readonly NetworkVariable<ulong> networkActiveWorldId = new(0,
+    private readonly NetworkVariable<ulong> networkActiveWorldId = new(
+        0,
         NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server);
+        NetworkVariableWritePermission.Server
+    );
 
     private GameObject currentHeldVisual;
     private readonly Dictionary<int, ulong> serverSlotWorldIds = new();
@@ -53,7 +61,14 @@ public class NetworkInventorySync : NetworkBehaviour
         if (playerController == null)
             playerController = GetComponent<PlayerController>();
 
-        inventory.OnActiveSlotChanged += OnLocalActiveSlotChanged;
+        if (inventory != null)
+            inventory.OnActiveSlotChanged += OnLocalActiveSlotChanged;
+    }
+
+    private void OnDestroy()
+    {
+        if (inventory != null)
+            inventory.OnActiveSlotChanged -= OnLocalActiveSlotChanged;
     }
 
     public override void OnNetworkSpawn()
@@ -63,7 +78,43 @@ public class NetworkInventorySync : NetworkBehaviour
         networkActiveHand.OnValueChanged += OnActiveHandChanged;
         networkActiveWorldId.OnValueChanged += OnActiveWorldIdChanged;
 
-        UpdateHeldVisual(networkActiveSlot.Value, networkActiveItemName.Value.ToString(), networkActiveHand.Value);
+        UpdateHeldVisual(
+            networkActiveSlot.Value,
+            networkActiveItemName.Value.ToString(),
+            networkActiveHand.Value
+        );
+
+        if (cachedWorldVisualPrefab == null &&
+            networkActiveWorldId.Value != 0 &&
+            !NetworkManager.Singleton.SpawnManager.SpawnedObjects.ContainsKey(networkActiveWorldId.Value))
+        {
+            Invoke(nameof(RetryBuildCachedVisual), 0.1f);
+        }
+    }
+
+    private void RetryBuildCachedVisual()
+    {
+        ulong worldId = networkActiveWorldId.Value;
+
+        if (worldId == 0)
+            return;
+
+        if (cachedWorldVisualPrefab != null)
+            return;
+
+        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(worldId, out var netObj))
+            return;
+
+        cachedWorldVisualPrefab = BuildHeldVisualFromNetworkObject(netObj);
+
+        if (cachedWorldVisualPrefab == null)
+            return;
+
+        UpdateHeldVisual(
+            networkActiveSlot.Value,
+            networkActiveItemName.Value.ToString(),
+            networkActiveHand.Value
+        );
     }
 
     public override void OnNetworkDespawn()
@@ -76,7 +127,8 @@ public class NetworkInventorySync : NetworkBehaviour
 
     public void ServerSetSlotWorldId(int slot, ulong worldId)
     {
-        if (!IsServer) return;
+        if (!IsServer)
+            return;
 
         serverSlotWorldIds[slot] = worldId;
 
@@ -92,24 +144,66 @@ public class NetworkInventorySync : NetworkBehaviour
             cachedWorldVisualPrefab = null;
         }
 
-        if (newId != 0 && NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(newId, out var netObj))
+        if (newId != 0 &&
+            NetworkManager.Singleton.SpawnManager.SpawnedObjects.TryGetValue(newId, out var netObj))
         {
-            var mf = netObj.GetComponentInChildren<MeshFilter>();
-            if (mf != null && mf.sharedMesh != null)
-            {
-                cachedWorldVisualPrefab = new GameObject("NetHeldVisual");
-                cachedWorldVisualPrefab.AddComponent<MeshFilter>().sharedMesh = mf.sharedMesh;
-                var mr = cachedWorldVisualPrefab.AddComponent<MeshRenderer>();
-                mr.sharedMaterial = mf.GetComponent<MeshRenderer>()?.sharedMaterial;
-                mr.enabled = false;
-            }
+            cachedWorldVisualPrefab = BuildHeldVisualFromNetworkObject(netObj);
         }
 
-        UpdateHeldVisual(networkActiveSlot.Value, networkActiveItemName.Value.ToString(), networkActiveHand.Value);
+        UpdateHeldVisual(
+            networkActiveSlot.Value,
+            networkActiveItemName.Value.ToString(),
+            networkActiveHand.Value
+        );
+    }
+
+    private GameObject BuildHeldVisualFromNetworkObject(NetworkObject netObj)
+    {
+        var meshFilters = netObj.GetComponentsInChildren<MeshFilter>();
+
+        if (meshFilters.Length == 0)
+            return null;
+
+        GameObject visual = new GameObject("NetHeldVisual");
+
+        foreach (var mf in meshFilters)
+        {
+            if (mf.sharedMesh == null)
+                continue;
+
+            GameObject child = new GameObject(mf.name);
+            child.transform.SetParent(visual.transform, false);
+            child.transform.localPosition = netObj.transform.InverseTransformPoint(mf.transform.position);
+            child.transform.localRotation = Quaternion.Inverse(netObj.transform.rotation) * mf.transform.rotation;
+
+            Vector3 parentScale = netObj.transform.lossyScale;
+            Vector3 childScale = mf.transform.lossyScale;
+
+            child.transform.localScale = new Vector3(
+                parentScale.x > 0.0001f ? childScale.x / parentScale.x : 1f,
+                parentScale.y > 0.0001f ? childScale.y / parentScale.y : 1f,
+                parentScale.z > 0.0001f ? childScale.z / parentScale.z : 1f
+            );
+
+            child.AddComponent<MeshFilter>().sharedMesh = mf.sharedMesh;
+
+            var sourceRenderer = mf.GetComponent<MeshRenderer>();
+            var targetRenderer = child.AddComponent<MeshRenderer>();
+
+            if (sourceRenderer != null)
+                targetRenderer.sharedMaterial = sourceRenderer.sharedMaterial;
+
+            targetRenderer.enabled = false;
+        }
+
+        return visual;
     }
 
     private void OnLocalActiveSlotChanged(int slot)
     {
+        if (inventory == null)
+            return;
+
         if (IsSpawned && networkActiveSlot.Value == slot)
             return;
 
@@ -121,19 +215,19 @@ public class NetworkInventorySync : NetworkBehaviour
 
         UpdateHeldVisual(slot, itemName, handIndex);
 
-        if (IsSpawned)
-        {
-            UpdateActiveSlotServerRpc(slot, new FixedString32Bytes(itemName ?? ""), handIndex);
+        if (!IsSpawned)
+            return;
 
-            if (IsServer)
-            {
-                ulong worldId = slot >= 0 && serverSlotWorldIds.TryGetValue(slot, out ulong id) ? id : 0;
-                networkActiveWorldId.Value = worldId;
-            }
-            else
-            {
-                SyncWorldIdServerRpc(slot);
-            }
+        UpdateActiveSlotServerRpc(slot, new FixedString32Bytes(itemName ?? ""), handIndex);
+
+        if (IsServer)
+        {
+            ulong worldId = slot >= 0 && serverSlotWorldIds.TryGetValue(slot, out ulong id) ? id : 0;
+            networkActiveWorldId.Value = worldId;
+        }
+        else
+        {
+            SyncWorldIdServerRpc(slot);
         }
     }
 
@@ -146,6 +240,9 @@ public class NetworkInventorySync : NetworkBehaviour
 
     public void SyncFullState(byte handIndex = 0)
     {
+        if (inventory == null)
+            return;
+
         int slot = inventory.ActiveSlot;
         string itemName = slot >= 0 ? inventory.GetItemAtSlot(slot) : null;
 
@@ -191,7 +288,13 @@ public class NetworkInventorySync : NetworkBehaviour
         if (dist < 0.01f)
             return false;
 
-        Collider[] hits = Physics.OverlapCapsule(bodyCenter, position, throwBlockCheckRadius, throwBlockMask, QueryTriggerInteraction.Ignore);
+        Collider[] hits = Physics.OverlapCapsule(
+            bodyCenter,
+            position,
+            throwBlockCheckRadius,
+            throwBlockMask,
+            QueryTriggerInteraction.Ignore
+        );
 
         foreach (Collider hit in hits)
         {
@@ -204,10 +307,19 @@ public class NetworkInventorySync : NetworkBehaviour
 
     public void LaunchActiveItem(float charge, Vector3 direction)
     {
+        if (inventory == null)
+            return;
+
         int slot = inventory.ActiveSlot;
 
         if (slot < 0)
             return;
+
+        if (inventory.IsSlotLocked(slot))
+        {
+            Debug.Log($"Slot {slot} is locked. Cannot drop item.");
+            return;
+        }
 
         string itemName = inventory.GetItemAtSlot(slot);
 
@@ -231,7 +343,23 @@ public class NetworkInventorySync : NetworkBehaviour
         GameObject worldObject = inventory.GetSlotDropPrefab(slot);
         GameObject heldVisual = inventory.GetSlotHeldPrefab(slot);
 
+        bool canRemove = inventory.CanRemoveItem(slot);
+
+        if (!canRemove)
+            return;
+
+        bool wasRoleItem = inventory.ActiveSlotIsRoleItem;
+        PlayerRole droppedRole = inventory.ActiveSlotRole;
+
         inventory.RemoveItem(slot);
+
+        if (wasRoleItem && droppedRole != PlayerRole.None)
+        {
+            var roleComponent = GetComponent<NetworkPlayerRole>();
+
+            if (roleComponent != null)
+                roleComponent.RequestSetRole(PlayerRole.None);
+        }
 
         if (IsSpawned)
         {
@@ -259,17 +387,48 @@ public class NetworkInventorySync : NetworkBehaviour
         {
             GameObject dropObj = BuildDropItem(pos, rot, heldVisual, itemName);
             Rigidbody rb = dropObj.GetComponent<Rigidbody>();
-            if (rb != null) rb.linearVelocity = velocity;
+
+            if (rb != null)
+                rb.linearVelocity = velocity;
 
             if (heldVisual != null)
                 Destroy(heldVisual);
         }
     }
 
-    [ServerRpc]
-    private void LaunchServerRpc(int slot, FixedString32Bytes itemName, Vector3 position, Quaternion rotation, Vector3 velocity)
+    public bool CanLaunchActiveItem()
     {
-        inventory.RemoveItem(slot);
+        if (inventory == null)
+            return false;
+
+        int slot = inventory.ActiveSlot;
+
+        if (slot < 0)
+            return false;
+
+        if (inventory.IsSlotLocked(slot))
+            return false;
+
+        string itemName = inventory.GetItemAtSlot(slot);
+
+        if (string.IsNullOrEmpty(itemName))
+            return false;
+
+        return true;
+    }
+
+    [ServerRpc]
+    private void LaunchServerRpc(
+        int slot,
+        FixedString32Bytes itemName,
+        Vector3 position,
+        Quaternion rotation,
+        Vector3 velocity
+    )
+    {
+        if (inventory != null)
+            inventory.RemoveItem(slot);
+
         SyncFullState(networkActiveHand.Value);
 
         int idx = GetPrefabIndex(itemName.ToString());
@@ -277,9 +436,18 @@ public class NetworkInventorySync : NetworkBehaviour
         if (idx >= 0 && idx < worldDropPrefabs.Length && worldDropPrefabs[idx] != null)
         {
             GameObject obj = Instantiate(worldDropPrefabs[idx], position, rotation);
+
             Rigidbody rb = obj.GetComponent<Rigidbody>();
-            if (rb == null) rb = obj.AddComponent<Rigidbody>();
+
+            if (rb == null)
+                rb = obj.AddComponent<Rigidbody>();
+
             rb.linearVelocity = velocity;
+
+            NetworkObject netObj = obj.GetComponent<NetworkObject>();
+
+            if (netObj != null && !netObj.IsSpawned)
+                netObj.Spawn();
         }
     }
 
@@ -291,15 +459,27 @@ public class NetworkInventorySync : NetworkBehaviour
         for (int i = 0; i < ItemNames.Length; i++)
         {
             if (ItemNames[i] == itemName)
-                return i - 1;
+                return i;
         }
 
         return -1;
     }
 
-    private static readonly string[] ItemNames = { "Wrench" };
+    private static readonly string[] ItemNames =
+    {
+        "Wrench",
+        "Instructor Book",
+        "Mechanic Wrench",
+        "Electrician Multimeter",
+        "Operator Tablet"
+    };
 
-    private static GameObject BuildDropItem(Vector3 position, Quaternion rotation, GameObject heldVisual, string itemName)
+    private static GameObject BuildDropItem(
+        Vector3 position,
+        Quaternion rotation,
+        GameObject heldVisual,
+        string itemName
+    )
     {
         GameObject obj = new GameObject($"Dropped_{itemName}");
         obj.transform.SetPositionAndRotation(position, rotation);
@@ -310,11 +490,15 @@ public class NetworkInventorySync : NetworkBehaviour
             vis.transform.localPosition = Vector3.zero;
             vis.transform.localRotation = Quaternion.identity;
             vis.transform.localScale = Vector3.one;
-            var renderer = vis.GetComponentInChildren<MeshRenderer>();
-            if (renderer != null) renderer.enabled = true;
+
+            var renderers = vis.GetComponentsInChildren<MeshRenderer>();
+
+            foreach (var r in renderers)
+                r.enabled = true;
         }
 
         obj.AddComponent<BoxCollider>();
+
         Rigidbody rb = obj.AddComponent<Rigidbody>();
         rb.useGravity = true;
 
@@ -332,7 +516,11 @@ public class NetworkInventorySync : NetworkBehaviour
     }
 
     [ServerRpc]
-    private void UpdateActiveSlotServerRpc(int slot, FixedString32Bytes itemName, byte handIndex)
+    private void UpdateActiveSlotServerRpc(
+        int slot,
+        FixedString32Bytes itemName,
+        byte handIndex
+    )
     {
         networkActiveSlot.Value = slot;
         networkActiveItemName.Value = itemName;
@@ -341,16 +529,25 @@ public class NetworkInventorySync : NetworkBehaviour
 
     private void OnActiveSlotChanged(int oldValue, int newValue)
     {
-        inventory.SetActiveSlotFromNetwork(newValue);
-        UpdateHeldVisual(newValue, networkActiveItemName.Value.ToString(), networkActiveHand.Value);
+        if (inventory != null)
+            inventory.SetActiveSlotFromNetwork(newValue);
+
+        UpdateHeldVisual(
+            newValue,
+            networkActiveItemName.Value.ToString(),
+            networkActiveHand.Value
+        );
     }
 
-    private void OnActiveItemNameChanged(FixedString32Bytes oldValue, FixedString32Bytes newValue)
+    private void OnActiveItemNameChanged(
+        FixedString32Bytes oldValue,
+        FixedString32Bytes newValue
+    )
     {
         int slot = networkActiveSlot.Value;
         string itemName = newValue.ToString();
 
-        if (slot >= 0)
+        if (inventory != null && slot >= 0)
             inventory.SetSlotFromNetwork(slot, itemName);
 
         UpdateHeldVisual(slot, itemName, networkActiveHand.Value);
@@ -358,7 +555,11 @@ public class NetworkInventorySync : NetworkBehaviour
 
     private void OnActiveHandChanged(byte oldValue, byte newValue)
     {
-        UpdateHeldVisual(networkActiveSlot.Value, networkActiveItemName.Value.ToString(), newValue);
+        UpdateHeldVisual(
+            networkActiveSlot.Value,
+            networkActiveItemName.Value.ToString(),
+            newValue
+        );
     }
 
     private void UpdateHeldVisual(int slot, string itemName, byte handIndex)
@@ -377,7 +578,9 @@ public class NetworkInventorySync : NetworkBehaviour
         if (pivot == null)
             return;
 
-        GameObject prefab = inventory != null ? inventory.GetSlotHeldPrefab(slot) : null;
+        GameObject prefab = inventory != null
+            ? inventory.GetSlotHeldPrefab(slot)
+            : null;
 
         if (prefab == null)
             prefab = cachedWorldVisualPrefab;
@@ -395,7 +598,10 @@ public class NetworkInventorySync : NetworkBehaviour
 
         currentHeldVisual = Instantiate(prefab, pivot.position, pivot.rotation, pivot);
         currentHeldVisual.transform.localScale = Vector3.one * heldItemScale;
-        var renderer = currentHeldVisual.GetComponentInChildren<MeshRenderer>();
-        if (renderer != null) renderer.enabled = true;
+
+        var renderers = currentHeldVisual.GetComponentsInChildren<MeshRenderer>();
+
+        foreach (var r in renderers)
+            r.enabled = true;
     }
 }

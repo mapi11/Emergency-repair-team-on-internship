@@ -522,10 +522,21 @@ public class PlayerController : MonoBehaviour
             inventory.SwitchToSlot(4);
         }
 
+        // Если предмет стал заблокированным уже во время зажатия Q,
+        // например стартовала миссия, сразу отменяем заряд.
+        if (isChargingThrow && !CanStartThrowActiveItem())
+        {
+            CancelCharge();
+            return;
+        }
+
         if (keyboard.qKey.wasPressedThisFrame && !isChargingThrow)
         {
-            if (inventory.ActiveSlot < 0 || string.IsNullOrEmpty(inventory.ActiveItemType))
+            if (!CanStartThrowActiveItem())
+            {
+                CancelCharge();
                 return;
+            }
 
             isChargingThrow = true;
             throwChargeTime = 0f;
@@ -535,6 +546,12 @@ public class PlayerController : MonoBehaviour
         }
         else if (keyboard.qKey.isPressed && isChargingThrow)
         {
+            if (!CanStartThrowActiveItem())
+            {
+                CancelCharge();
+                return;
+            }
+
             throwChargeTime += Time.deltaTime;
             float normalized = Mathf.Clamp01(throwChargeTime / maxChargeTime);
 
@@ -543,14 +560,18 @@ public class PlayerController : MonoBehaviour
         }
         else if (keyboard.qKey.wasReleasedThisFrame && isChargingThrow)
         {
-            isChargingThrow = false;
             float normalized = Mathf.Clamp01(throwChargeTime / maxChargeTime);
 
-            if (chargeSlider != null)
-                chargeSlider.Hide();
+            CancelCharge();
 
-            Vector3 direction = cameraPivot != null ? cameraPivot.forward :
-                                playerCamera != null ? playerCamera.transform.forward : transform.forward;
+            if (!CanStartThrowActiveItem())
+                return;
+
+            Vector3 direction = cameraPivot != null
+                ? cameraPivot.forward
+                : playerCamera != null
+                    ? playerCamera.transform.forward
+                    : transform.forward;
 
             if (cachedSync == null)
                 cachedSync = GetComponent<NetworkInventorySync>();
@@ -558,6 +579,25 @@ public class PlayerController : MonoBehaviour
             if (cachedSync != null)
                 cachedSync.LaunchActiveItem(normalized, direction);
         }
+    }
+
+    private bool CanStartThrowActiveItem()
+    {
+        if (inventory == null)
+            return false;
+
+        int slot = inventory.ActiveSlot;
+
+        if (slot < 0)
+            return false;
+
+        if (string.IsNullOrEmpty(inventory.ActiveItemType))
+            return false;
+
+        if (inventory.IsSlotLocked(slot))
+            return false;
+
+        return true;
     }
 
     private void CancelCharge()
