@@ -785,14 +785,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5010308990427170304}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: 2.4, z: 0}
+  m_LocalRotation: {x: -0, y: 1, z: -0, w: 0}
+  m_LocalPosition: {x: 0, y: 2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5512258016767357047}
   - {fileID: 2766016068119354475}
-  m_Father: {fileID: 1344536226991297041}
+  m_Father: {fileID: 1176713597209492168}
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1 &7502394609532927377
 GameObject:
@@ -945,7 +945,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -606050562, guid: de633063270d5b7429a726c5d688474c, type: 3}
+  m_Sprite: {fileID: -845659269, guid: 7f0c9023a4294ab499c4fe1a0297a7e7, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -1147,13 +1147,13 @@ PrefabInstance:
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: 1221688299579084739, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 2301791019539966925}
-    - targetCorrespondingSourceObject: {fileID: 1221688299579084739, guid: 757e198222a17af43a243b993516a699, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 7532610214660715125}
     - targetCorrespondingSourceObject: {fileID: 5503983518300111507, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5454175755207151458}
+    - targetCorrespondingSourceObject: {fileID: 1299298741292328730, guid: 757e198222a17af43a243b993516a699, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2301791019539966925}
     - targetCorrespondingSourceObject: {fileID: 9174997997963481560, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1171421139361525019}
@@ -1368,7 +1368,7 @@ MonoBehaviour:
   hideForLocalPlayer: 1
   maxVisibleDistance: 20
   faceCamera: 1
-  keepUpright: 1
+  keepUpright: 0
   currentName: Nickname
 --- !u!114 &6555761690040595402
 MonoBehaviour:
@@ -1385,10 +1385,10 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   roleIcon: {fileID: 5833077913694805259}
   roleSprites:
-  - {fileID: -606050562, guid: de633063270d5b7429a726c5d688474c, type: 3}
-  - {fileID: -1020546114, guid: de633063270d5b7429a726c5d688474c, type: 3}
-  - {fileID: 21300000, guid: 0bbfe7f2920c5ee4597d2b6df23946e8, type: 3}
-  - {fileID: 21300000, guid: 8ffbf62a66bd9e1458c41cf94f7839e1, type: 3}
+  - {fileID: -845659269, guid: 7f0c9023a4294ab499c4fe1a0297a7e7, type: 3}
+  - {fileID: -1010077106, guid: 7f0c9023a4294ab499c4fe1a0297a7e7, type: 3}
+  - {fileID: 471896488, guid: fc9e1e494cd13bb4aab887f9215670ac, type: 3}
+  - {fileID: -798211509, guid: fc9e1e494cd13bb4aab887f9215670ac, type: 3}
 --- !u!114 &810037941918450832
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1612,6 +1612,11 @@ MonoBehaviour:
   queuedSamplesDebug: 0
   distanceToListenerDebug: 0
   hasListenerDebug: 0
+--- !u!4 &1176713597209492168 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1299298741292328730, guid: 757e198222a17af43a243b993516a699, type: 3}
+  m_PrefabInstance: {fileID: 170168777652854226}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1344536226991297041 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1221688299579084739, guid: 757e198222a17af43a243b993516a699, type: 3}

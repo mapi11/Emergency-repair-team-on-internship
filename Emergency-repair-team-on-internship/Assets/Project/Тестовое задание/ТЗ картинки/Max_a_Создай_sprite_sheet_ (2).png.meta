@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: de633063270d5b7429a726c5d688474c
+guid: 5b16bec58a40b3b49ae28311052014d1
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -110,13 +110,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: InstructorImgTest
+      name: "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_0"
       rect:
         serializedVersion: 2
-        x: 231
-        y: 380
-        width: 468
-        height: 303
+        x: 328
+        y: 825
+        width: 141
+        height: 161
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -125,20 +125,20 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: 8e06ca0e2abf1274cbe382858b86e209
-      internalID: -606050562
+      spriteID: d6e6f0b4dd8b17147aa169c77b90e912
+      internalID: 241727280
       vertices: []
       indices: 
       edges: []
       weights: []
     - serializedVersion: 2
-      name: MechanicImgTest
+      name: "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_1"
       rect:
         serializedVersion: 2
-        x: 886
-        y: 298
-        width: 352
-        height: 467
+        x: 407
+        y: 676
+        width: 137
+        height: 139
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -147,8 +147,52 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: 0
       bones: []
-      spriteID: c757b0f084b4d58468c94e194bbd7f55
-      internalID: -1020546114
+      spriteID: f553bd3889db304418d06948377d1f2a
+      internalID: -1872235131
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_2"
+      rect:
+        serializedVersion: 2
+        x: 961
+        y: 462
+        width: 157
+        height: 146
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 082ee00586d262e4ba1ba1bbcd4ca92f
+      internalID: 357573211
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_3"
+      rect:
+        serializedVersion: 2
+        x: 427
+        y: 317
+        width: 177
+        height: 118
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d87747d6900514748880d3d19b9d2a5a
+      internalID: 489482289
       vertices: []
       indices: 
       edges: []
@@ -157,7 +201,7 @@ TextureImporter:
     customData: 
     physicsShape: []
     bones: []
-    spriteID: 452f566d734c8144fb723bfbced230b4
+    spriteID: ef69a9801d3a8234ca51405b988d41bf
     internalID: 0
     vertices: []
     indices: 
@@ -167,8 +211,10 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      InstructorImgTest: -606050562
-      MechanicImgTest: -1020546114
+      "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_0": 241727280
+      "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_1": -1872235131
+      "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_2": 357573211
+      "Max_a_\u0421\u043E\u0437\u0434\u0430\u0439_sprite_sheet_ (2)_3": 489482289
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
