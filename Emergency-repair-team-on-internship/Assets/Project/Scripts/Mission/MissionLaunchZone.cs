@@ -37,8 +37,13 @@ public class MissionLaunchZone : NetworkBehaviour
 
         UnsubscribeFromCountdown();
 
-        foreach (ulong id in playersInZone)
-            UnlockPlayerRoleSlots(id);
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+        {
+            foreach (ulong id in playersInZone)
+                UnlockPlayerRoleSlots(id);
+        }
+
+        playersInZone.Clear();
     }
 
     private void SubscribeToCountdown()
@@ -90,7 +95,9 @@ public class MissionLaunchZone : NetworkBehaviour
     {
         playersInZone.Remove(clientId);
         MissionManager.Instance?.CancelCountdown();
-        UnlockPlayerRoleSlots(clientId);
+
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.IsListening)
+            UnlockPlayerRoleSlots(clientId);
     }
 
     private bool IsServerPlayerInZone(ulong clientId)

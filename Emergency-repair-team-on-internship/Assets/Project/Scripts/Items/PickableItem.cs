@@ -48,7 +48,7 @@ public class PickableItem : Interactable
     {
         base.OnNetworkDespawn();
 
-        if (IsServer && !string.IsNullOrEmpty(gameObject.scene.name))
+        if (IsServer && NetworkManager.Singleton.IsListening && !string.IsNullOrEmpty(gameObject.scene.name))
             MissionManager.RegisterDespawnedSceneObject(GetSceneKey());
     }
 
@@ -160,7 +160,10 @@ public class PickableItem : Interactable
             var sync = playerNetObj.GetComponent<NetworkInventorySync>();
 
             if (sync != null)
+            {
                 sync.ServerSetSlotWorldId(slot, NetworkObjectId);
+                sync.ServerTrackItem(itemName);
+            }
         }
 
         MissionManager.RegisterDespawnedSceneObject(GetSceneKey());

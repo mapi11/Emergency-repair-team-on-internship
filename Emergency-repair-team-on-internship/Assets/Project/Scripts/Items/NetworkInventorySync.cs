@@ -57,6 +57,84 @@ public class NetworkInventorySync : NetworkBehaviour
 
     private GameObject currentHeldVisual;
     private readonly Dictionary<int, ulong> serverSlotWorldIds = new();
+
+    private static readonly Dictionary<ulong, TrackedPlayer> allTrackedItems = new();
+    private static bool disconnectHookRegistered;
+
+    private class TrackedPlayer
+    {
+        public List<string> Items = new();
+        public Vector3 LastPosition;
+        public NetworkInventorySync SyncInstance;
+    }
+
+    public static void ServerTrackItem(ulong clientId, string itemName)
+    {
+        if (string.IsNullOrEmpty(itemName))
+            return;
+
+        if (!allTrackedItems.TryGetValue(clientId, out var entry))
+        {
+            entry = new TrackedPlayer();
+            allTrackedItems[clientId] = entry;
+        }
+
+        if (!entry.Items.Contains(itemName))
+            entry.Items.Add(itemName);
+    }
+
+    public static void ServerUntrackItem(ulong clientId, string itemName)
+    {
+        if (allTrackedItems.TryGetValue(clientId, out var entry))
+        {
+            entry.Items.Remove(itemName);
+        }
+    }
+
+    private static void OnDisconnectStatic(ulong clientId)
+    {
+        if (!allTrackedItems.TryGetValue(clientId, out var entry))
+            return;
+
+        allTrackedItems.Remove(clientId);
+
+        if (entry.Items.Count == 0)
+            return;
+
+        if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
+            return;
+
+        var sync = entry.SyncInstance;
+
+        foreach (string itemName in entry.Items)
+        {
+            if (string.IsNullOrEmpty(itemName))
+                continue;
+
+            int idx = sync != null ? sync.GetPrefabIndex(itemName) : -1;
+            Quaternion rotation = Random.rotationUniform;
+            Vector3 spawnPos = entry.LastPosition + Vector3.up * 0.3f;
+
+            GameObject dropObj;
+
+            if (idx >= 0 && sync != null && idx < sync.items.Length && sync.items[idx].WorldDropPrefab != null)
+            {
+                dropObj = Object.Instantiate(sync.items[idx].WorldDropPrefab, spawnPos, rotation);
+            }
+            else
+            {
+                dropObj = BuildDropItem(spawnPos, rotation, null, itemName);
+            }
+
+            NetworkObject netObj = dropObj.GetComponent<NetworkObject>();
+
+            if (netObj == null)
+                netObj = dropObj.AddComponent<NetworkObject>();
+
+            if (!netObj.IsSpawned)
+                netObj.Spawn(true);
+        }
+    }
     private GameObject cachedWorldVisualPrefab;
 
     private void Awake()
@@ -69,6 +147,15 @@ public class NetworkInventorySync : NetworkBehaviour
 
         if (inventory != null)
             inventory.OnActiveSlotChanged += OnLocalActiveSlotChanged;
+    }
+
+    private void Update()
+    {
+        if (!IsServer)
+            return;
+
+        if (allTrackedItems.TryGetValue(OwnerClientId, out var entry) && entry.Items.Count > 0)
+            entry.LastPosition = transform.position;
     }
 
     private void OnValidate()
@@ -117,6 +204,21 @@ public class NetworkInventorySync : NetworkBehaviour
         {
             Invoke(nameof(RetryBuildCachedVisual), 0.1f);
         }
+
+        if (IsServer)
+        {
+            if (!disconnectHookRegistered)
+            {
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnDisconnectStatic;
+                disconnectHookRegistered = true;
+            }
+
+            if (allTrackedItems.TryGetValue(OwnerClientId, out var entry))
+            {
+                entry.SyncInstance = this;
+                entry.LastPosition = transform.position;
+            }
+        }
     }
 
     private void RetryBuildCachedVisual()
@@ -161,6 +263,28 @@ public class NetworkInventorySync : NetworkBehaviour
 
         if (networkActiveSlot.Value == slot)
             networkActiveWorldId.Value = worldId;
+    }
+
+    public void ServerTrackItem(string itemName)
+    {
+        if (!IsServer || string.IsNullOrEmpty(itemName))
+            return;
+
+        ServerTrackItem(OwnerClientId, itemName);
+
+        if (allTrackedItems.TryGetValue(OwnerClientId, out var entry))
+        {
+            entry.SyncInstance = this;
+            entry.LastPosition = transform.position;
+        }
+    }
+
+    public void ServerUntrackItem(string itemName)
+    {
+        if (!IsServer)
+            return;
+
+        ServerUntrackItem(OwnerClientId, itemName);
     }
 
     private void OnActiveWorldIdChanged(ulong oldId, ulong newId)
@@ -469,6 +593,8 @@ public class NetworkInventorySync : NetworkBehaviour
         if (inventory != null)
             inventory.RemoveItem(slot);
 
+        ServerUntrackItem(itemName.ToString());
+
         Vector3 position = ComputeThrowPosition(handIndex);
         Quaternion rotation = Quaternion.LookRotation(velocity);
 
@@ -501,10 +627,8 @@ public class NetworkInventorySync : NetworkBehaviour
         if (netObj == null)
             netObj = obj.AddComponent<NetworkObject>();
 
-        netObj.DestroyWithScene = true;
-
         if (!netObj.IsSpawned)
-            netObj.Spawn();
+            netObj.Spawn(true);
 
         ThrowItemSpawnClientRpc(netObj, position, velocity);
     }
