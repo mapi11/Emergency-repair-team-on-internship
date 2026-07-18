@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -13,6 +14,10 @@ using UnityEngine.SceneManagement;
 public class NetworkConnectionManager : MonoBehaviour
 {
     public static NetworkConnectionManager Instance { get; private set; }
+
+    private static readonly Dictionary<ulong, string> clientProfiles = new Dictionary<ulong, string>();
+    public static readonly HashSet<string> PreMissionProfiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+    private static readonly string localSessionId = Guid.NewGuid().ToString("N");
 
     [Header("Scenes")]
     [SerializeField] private string lobbySceneName = "Lobby";
@@ -112,6 +117,7 @@ public class NetworkConnectionManager : MonoBehaviour
         ApplyLocalConnectionData();
 
         RegisterNetworkCallbacks();
+        SetConnectionPayload();
 
         bool started = NetworkManager.Singleton.StartHost();
 
@@ -138,6 +144,7 @@ public class NetworkConnectionManager : MonoBehaviour
         ApplyLocalConnectionData();
 
         RegisterNetworkCallbacks();
+        SetConnectionPayload();
 
         bool started = NetworkManager.Singleton.StartClient();
 
@@ -205,6 +212,7 @@ public class NetworkConnectionManager : MonoBehaviour
             GameSessionData.ConnectionType = relayConnectionType;
 
             RegisterNetworkCallbacks();
+            SetConnectionPayload();
 
             bool started = NetworkManager.Singleton.StartHost();
 
@@ -286,6 +294,7 @@ public class NetworkConnectionManager : MonoBehaviour
             GameSessionData.ConnectionType = relayConnectionType;
 
             RegisterNetworkCallbacks();
+            SetConnectionPayload();
 
             bool started = NetworkManager.Singleton.StartClient();
 
@@ -331,6 +340,26 @@ public class NetworkConnectionManager : MonoBehaviour
         }
 
         SetStatus("Shutdown");
+    }
+
+    public static void SnapshotPreMissionProfiles()
+    {
+        PreMissionProfiles.Clear();
+        foreach (var profileId in clientProfiles.Values)
+            PreMissionProfiles.Add(profileId);
+    }
+
+    public static string GetConnectionPayloadId()
+    {
+        return localSessionId;
+    }
+
+    private static void SetConnectionPayload()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(GetConnectionPayloadId());
     }
 
     private void LoadLobbySceneAsServer()
@@ -415,11 +444,15 @@ public class NetworkConnectionManager : MonoBehaviour
         if (NetworkManager.Singleton == null)
             return;
 
+        NetworkManager.Singleton.NetworkConfig.ConnectionApproval = true;
+
+        NetworkManager.Singleton.ConnectionApprovalCallback -= OnConnectionApproval;
         NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
         NetworkManager.Singleton.OnTransportFailure -= OnTransportFailure;
 
+        NetworkManager.Singleton.ConnectionApprovalCallback += OnConnectionApproval;
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         NetworkManager.Singleton.OnServerStarted += OnServerStarted;
@@ -431,10 +464,36 @@ public class NetworkConnectionManager : MonoBehaviour
         if (NetworkManager.Singleton == null)
             return;
 
+        NetworkManager.Singleton.ConnectionApprovalCallback -= OnConnectionApproval;
         NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
         NetworkManager.Singleton.OnTransportFailure -= OnTransportFailure;
+    }
+
+    private void OnConnectionApproval(
+        NetworkManager.ConnectionApprovalRequest request,
+        NetworkManager.ConnectionApprovalResponse response)
+    {
+        string profileId = System.Text.Encoding.UTF8.GetString(request.Payload);
+        if (string.IsNullOrEmpty(profileId))
+            profileId = "Unknown";
+
+        clientProfiles[request.ClientNetworkId] = profileId;
+
+        if (MissionManager.Instance != null && MissionManager.Instance.IsMissionActive)
+        {
+            if (!PreMissionProfiles.Contains(profileId))
+            {
+                response.Approved = false;
+                response.Reason = "Mission is already in progress.";
+                response.CreatePlayerObject = false;
+                return;
+            }
+        }
+
+        response.Approved = true;
+        response.CreatePlayerObject = true;
     }
 
     private void OnServerStarted()
@@ -471,7 +530,14 @@ public class NetworkConnectionManager : MonoBehaviour
 
     private void OnClientDisconnected(ulong clientId)
     {
-        Debug.LogWarning($"⚠ Client disconnected: {clientId}");
+        clientProfiles.Remove(clientId);
+
+        string reason = NetworkManager.Singleton != null
+            ? NetworkManager.Singleton.DisconnectReason
+            : "";
+
+        Debug.LogWarning($"⚠ Client disconnected: {clientId}" +
+            (string.IsNullOrEmpty(reason) ? "" : $" Reason: {reason}"));
 
         if (NetworkManager.Singleton == null)
             return;
@@ -481,7 +547,9 @@ public class NetworkConnectionManager : MonoBehaviour
             waitingForClientConnection = false;
             clientConnectionTimer = 0f;
 
-            SetStatus($"Disconnected. Local ClientId: {clientId}");
+            SetStatus(string.IsNullOrEmpty(reason)
+                ? $"Disconnected. Local ClientId: {clientId}"
+                : $"Disconnected: {reason}");
         }
         else
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -324,12 +325,22 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
         Debug.Log($"🌐 Local connection data: {address}:{port}");
     }
 
+    private static void SetConnectionPayload()
+    {
+        if (NetworkManager.Singleton == null)
+            return;
+
+        string profileId = NetworkConnectionManager.GetConnectionPayloadId();
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(profileId);
+    }
+
     private void StartLocalHost()
     {
         ApplyLocalSettings();
         ApplyLocalConnectionData();
 
         RegisterNetworkCallbacks();
+        SetConnectionPayload();
 
         bool started = NetworkManager.Singleton.StartHost();
 
@@ -344,6 +355,7 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
         ApplyLocalConnectionData();
 
         RegisterNetworkCallbacks();
+        SetConnectionPayload();
 
         bool started = NetworkManager.Singleton.StartClient();
 
@@ -415,6 +427,7 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
             relayJoinCode = relayJoinCode.Trim().ToUpperInvariant();
 
             RegisterNetworkCallbacks();
+            SetConnectionPayload();
 
             bool started = NetworkManager.Singleton.StartHost();
 
@@ -485,6 +498,7 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
             transport.SetRelayServerData(relayServerData);
 
             RegisterNetworkCallbacks();
+            SetConnectionPayload();
 
             bool started = NetworkManager.Singleton.StartClient();
 
@@ -632,6 +646,8 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
         if (NetworkManager.Singleton == null)
             return;
 
+        NetworkManager.Singleton.NetworkConfig.ConnectionApproval = true;
+
         NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
         NetworkManager.Singleton.OnServerStarted -= OnServerStarted;
@@ -700,7 +716,12 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
 
     private void OnClientDisconnected(ulong clientId)
     {
-        Debug.LogWarning($"⚠ Client disconnected: {clientId}");
+        string reason = NetworkManager.Singleton != null
+            ? NetworkManager.Singleton.DisconnectReason
+            : "";
+
+        Debug.LogWarning($"⚠ Client disconnected: {clientId}" +
+            (string.IsNullOrEmpty(reason) ? "" : $" Reason: {reason}"));
 
         if (NetworkManager.Singleton == null)
             return;
@@ -710,7 +731,9 @@ public class SimpleLocalNetworkMenu : MonoBehaviour
             waitingForClientConnection = false;
             clientConnectionTimer = 0f;
 
-            status = $"Disconnected. Local ClientId: {clientId}";
+            status = string.IsNullOrEmpty(reason)
+                ? $"Disconnected. Local ClientId: {clientId}"
+                : $"Disconnected: {reason}";
         }
         else
         {

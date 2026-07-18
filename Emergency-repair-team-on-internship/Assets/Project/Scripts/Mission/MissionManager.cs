@@ -127,6 +127,7 @@ public class MissionManager : NetworkBehaviour
     {
         if (IsMissionActive) return;
         CancelCountdown();
+        NetworkConnectionManager.SnapshotPreMissionProfiles();
         IsMissionActive = true;
         StartTransitionClientRpc();
         NetworkManager.Singleton.SceneManager.LoadScene(missionSceneName, LoadSceneMode.Single);
@@ -137,6 +138,7 @@ public class MissionManager : NetworkBehaviour
     {
         if (!IsMissionActive) return;
         CancelCountdown();
+        NetworkConnectionManager.PreMissionProfiles.Clear();
         IsMissionActive = false;
         StartTransitionClientRpc();
         NetworkManager.Singleton.SceneManager.LoadScene(lobbySceneName, LoadSceneMode.Single);
