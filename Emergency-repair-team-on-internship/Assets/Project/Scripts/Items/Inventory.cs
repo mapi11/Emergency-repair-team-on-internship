@@ -461,4 +461,68 @@ public class Inventory : MonoBehaviour
 
         maxSlots = newMax;
     }
+
+    public void ClearAll()
+    {
+        for (int i = 0; i < slots.Length; i++)
+            ForceRemoveItem(i);
+    }
+
+    public void RearrangeRoleSlots()
+    {
+        int primarySlot = -1;
+        int subSlot = -1;
+
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] == null) continue;
+            if (!slotRoleItems[i]) continue;
+
+            if (slotRoleItemCategories[i] == RoleItemCategory.PrimaryRole)
+                primarySlot = i;
+            else if (slotRoleItemCategories[i] == RoleItemCategory.SubRole)
+                subSlot = i;
+        }
+
+        if (primarySlot >= 0 && primarySlot != 0)
+            SwapSlots(primarySlot, 0);
+
+        if (subSlot >= 0 && subSlot != 1)
+        {
+            if (slots[1] != null && slotRoleItems[1] && slotRoleItemCategories[1] == RoleItemCategory.PrimaryRole)
+            {
+                int temp = subSlot;
+                if (temp == 0) temp = subSlot;
+                SwapSlots(subSlot, 1);
+            }
+            else
+            {
+                SwapSlots(subSlot, 1);
+            }
+        }
+    }
+
+    private void SwapSlots(int a, int b)
+    {
+        if (a < 0 || a >= slots.Length || b < 0 || b >= slots.Length || a == b) return;
+
+        (slots[a], slots[b]) = (slots[b], slots[a]);
+        (slotIcons[a], slotIcons[b]) = (slotIcons[b], slotIcons[a]);
+        (slotHeldPrefabs[a], slotHeldPrefabs[b]) = (slotHeldPrefabs[b], slotHeldPrefabs[a]);
+        (slotDropPrefabs[a], slotDropPrefabs[b]) = (slotDropPrefabs[b], slotDropPrefabs[a]);
+        (slotLocked[a], slotLocked[b]) = (slotLocked[b], slotLocked[a]);
+        (slotRoleItems[a], slotRoleItems[b]) = (slotRoleItems[b], slotRoleItems[a]);
+        (slotRoles[a], slotRoles[b]) = (slotRoles[b], slotRoles[a]);
+        (slotRoleItemCategories[a], slotRoleItemCategories[b]) = (slotRoleItemCategories[b], slotRoleItemCategories[a]);
+
+        OnSlotChanged?.Invoke(a, slots[a]);
+        OnSlotIconChanged?.Invoke(a, slotIcons[a]);
+        OnSlotLockChanged?.Invoke(a, slotLocked[a]);
+        OnSlotRoleChanged?.Invoke(a, slotRoleItems[a], slotRoles[a]);
+
+        OnSlotChanged?.Invoke(b, slots[b]);
+        OnSlotIconChanged?.Invoke(b, slotIcons[b]);
+        OnSlotLockChanged?.Invoke(b, slotLocked[b]);
+        OnSlotRoleChanged?.Invoke(b, slotRoleItems[b], slotRoles[b]);
+    }
 }

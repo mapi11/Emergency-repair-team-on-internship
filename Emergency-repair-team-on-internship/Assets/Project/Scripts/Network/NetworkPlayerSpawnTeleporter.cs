@@ -6,9 +6,6 @@ using UnityEngine.SceneManagement;
 
 public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
 {
-    [Header("Scene")]
-    [SerializeField] private string lobbySceneName = "Lobby";
-
     [Header("Teleport")]
     [SerializeField] private float teleportDelay = 0.15f;
     [SerializeField] private bool teleportOnlyOwner = true;
@@ -27,8 +24,7 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
     public override void OnNetworkSpawn()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
-
-        TryTeleportIfInLobby();
+        TryTeleportToSpawn();
     }
 
     public override void OnNetworkDespawn()
@@ -43,21 +39,15 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name != lobbySceneName)
-            return;
-
-        TryTeleportIfInLobby();
+        TryTeleportToSpawn();
     }
 
-    private void TryTeleportIfInLobby()
+    private void TryTeleportToSpawn()
     {
         if (!IsSpawned)
             return;
 
         if (teleportOnlyOwner && !IsOwner)
-            return;
-
-        if (SceneManager.GetActiveScene().name != lobbySceneName)
             return;
 
         StartCoroutine(TeleportAfterDelay());
@@ -71,7 +61,7 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
 
         if (spawnPoint == null)
         {
-            Debug.LogWarning($"⚠ No PlayerSpawnPoint found in scene {lobbySceneName}");
+            Debug.Log($"No PlayerSpawnPoint found in scene {SceneManager.GetActiveScene().name}");
             yield break;
         }
 
@@ -92,20 +82,16 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
         for (int i = 0; i < spawnPoints.Length; i++)
         {
             if (spawnPoints[i].Index == spawnIndex)
-            {
                 return spawnPoints[i];
-            }
         }
 
         return spawnPoints[spawnIndex];
     }
 
-    private void TeleportTo(Vector3 position, Quaternion rotation)
+    public void TeleportTo(Vector3 position, Quaternion rotation)
     {
         if (characterController == null)
-        {
             characterController = GetComponent<CharacterController>();
-        }
 
         bool controllerWasEnabled = false;
 
@@ -118,16 +104,11 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
         transform.SetPositionAndRotation(position, rotation);
 
         if (characterController != null)
-        {
             characterController.enabled = controllerWasEnabled;
-        }
 
         hasTeleported = true;
         lastTeleportPosition = position;
 
-        Debug.Log(
-            $"📍 Player teleported to spawn. " +
-            $"OwnerClientId={OwnerClientId}, Position={position}"
-        );
+        Debug.Log($"Player teleported to spawn. OwnerClientId={OwnerClientId}, Position={position}");
     }
 }

@@ -16,6 +16,8 @@ public class NetworkPlayerRole : NetworkBehaviour
 
     public PlayerRole CurrentRole => (PlayerRole)networkRole.Value;
 
+    public event System.Action<PlayerRole, PlayerRole> OnRoleChangedEvent;
+
     private void Awake()
     {
         if (roleIcon != null)
@@ -70,6 +72,7 @@ public class NetworkPlayerRole : NetworkBehaviour
     private void OnRoleChanged(byte oldRole, byte newRole)
     {
         UpdateIcon(newRole);
+        OnRoleChangedEvent?.Invoke((PlayerRole)oldRole, (PlayerRole)newRole);
     }
 
     private void UpdateIcon(byte role)

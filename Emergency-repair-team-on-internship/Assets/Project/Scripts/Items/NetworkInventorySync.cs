@@ -13,9 +13,15 @@ public class NetworkInventorySync : NetworkBehaviour
     [SerializeField] private Transform dropOrigin;
 
     [Header("Item Prefabs")]
-    [SerializeField] private GameObject[] heldItemPrefabs;
-    [SerializeField] private GameObject[] worldDropPrefabs;
+    [SerializeField] private ItemEntry[] items;
     [SerializeField] private float heldItemScale = 0.8f;
+
+    [System.Serializable]
+    private class ItemEntry
+    {
+        public string Name;
+        public GameObject WorldDropPrefab;
+    }
 
     [Header("Throw")]
     [SerializeField] private Transform leftEjectPoint;
@@ -63,6 +69,27 @@ public class NetworkInventorySync : NetworkBehaviour
 
         if (inventory != null)
             inventory.OnActiveSlotChanged += OnLocalActiveSlotChanged;
+    }
+
+    private void OnValidate()
+    {
+        if (items == null)
+            return;
+
+        for (int i = 0; i < items.Length; i++)
+        {
+            if (items[i] == null)
+                continue;
+
+            if (items[i].WorldDropPrefab == null)
+                continue;
+
+            if (string.IsNullOrEmpty(items[i].Name))
+            {
+                var pickable = items[i].WorldDropPrefab.GetComponent<PickableItem>();
+                items[i].Name = pickable != null ? pickable.ItemName : items[i].WorldDropPrefab.name;
+            }
+        }
     }
 
     private void OnDestroy()
@@ -280,6 +307,28 @@ public class NetworkInventorySync : NetworkBehaviour
         return transform.position + transform.forward * 0.5f;
     }
 
+    private Vector3 ComputeThrowPosition(byte handIndex)
+    {
+        bool useLeft = handIndex == 1;
+
+        if (useLeft && leftEjectPoint != null)
+            return leftEjectPoint.position;
+
+        if (!useLeft && rightEjectPoint != null)
+            return rightEjectPoint.position;
+
+        if (dropOrigin != null)
+            return dropOrigin.position;
+
+        if (useLeft && leftHoldPivot != null)
+            return leftHoldPivot.position;
+
+        if (rightHoldPivot != null)
+            return rightHoldPivot.position;
+
+        return transform.position + transform.forward * 0.5f;
+    }
+
     private bool IsPositionBlocked(Vector3 position)
     {
         Vector3 bodyCenter = transform.position + Vector3.up * 0.5f;
@@ -337,10 +386,8 @@ public class NetworkInventorySync : NetworkBehaviour
             currentHeldVisual = null;
         }
 
-        Quaternion rot = Quaternion.LookRotation(direction);
         Vector3 velocity = direction * Mathf.Lerp(minThrowForce, maxThrowForce, charge);
 
-        GameObject worldObject = inventory.GetSlotDropPrefab(slot);
         GameObject heldVisual = inventory.GetSlotHeldPrefab(slot);
 
         bool canRemove = inventory.CanRemoveItem(slot);
@@ -366,18 +413,11 @@ public class NetworkInventorySync : NetworkBehaviour
             if (!IsOwner)
                 return;
 
-            if (worldObject != null)
-            {
-                PickableItem pickable = worldObject.GetComponent<PickableItem>();
+            byte handIndex = playerController != null
+                ? (byte)(playerController.SelectedInteractionHand == PlayerController.InteractionHand.Right ? 0 : 1)
+                : (byte)0;
 
-                if (pickable != null)
-                    pickable.DropServerRpc(pos, rot, velocity);
-            }
-            else
-            {
-                LaunchServerRpc(slot, new FixedString32Bytes(itemName), pos, rot, velocity);
-            }
-
+            LaunchServerRpc(slot, new FixedString32Bytes(itemName), handIndex, velocity);
             RemoveSlotWorldIdServerRpc(slot);
 
             if (heldVisual != null)
@@ -385,6 +425,7 @@ public class NetworkInventorySync : NetworkBehaviour
         }
         else
         {
+            Quaternion rot = Quaternion.LookRotation(direction);
             GameObject dropObj = BuildDropItem(pos, rot, heldVisual, itemName);
             Rigidbody rb = dropObj.GetComponent<Rigidbody>();
 
@@ -421,58 +462,79 @@ public class NetworkInventorySync : NetworkBehaviour
     private void LaunchServerRpc(
         int slot,
         FixedString32Bytes itemName,
-        Vector3 position,
-        Quaternion rotation,
+        byte handIndex,
         Vector3 velocity
     )
     {
         if (inventory != null)
             inventory.RemoveItem(slot);
 
-        SyncFullState(networkActiveHand.Value);
+        Vector3 position = ComputeThrowPosition(handIndex);
+        Quaternion rotation = Quaternion.LookRotation(velocity);
 
-        int idx = GetPrefabIndex(itemName.ToString());
+        string name = itemName.ToString();
+        int idx = GetPrefabIndex(name);
 
-        if (idx >= 0 && idx < worldDropPrefabs.Length && worldDropPrefabs[idx] != null)
+        GameObject obj;
+
+        if (idx >= 0 && idx < items.Length && items[idx].WorldDropPrefab != null)
         {
-            GameObject obj = Instantiate(worldDropPrefabs[idx], position, rotation);
+            obj = Instantiate(items[idx].WorldDropPrefab, position, rotation);
+        }
+        else
+        {
+            obj = new GameObject($"Dropped_{name}");
+            obj.transform.SetPositionAndRotation(position, rotation);
+            obj.AddComponent<BoxCollider>();
+            obj.AddComponent<Rigidbody>().useGravity = true;
+            var pickable = obj.AddComponent<PickableItem>();
+            pickable.Setup(name, null);
+        }
 
-            Rigidbody rb = obj.GetComponent<Rigidbody>();
+        Rigidbody rb = obj.GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = obj.AddComponent<Rigidbody>();
 
-            if (rb == null)
-                rb = obj.AddComponent<Rigidbody>();
+        rb.linearVelocity = velocity;
 
-            rb.linearVelocity = velocity;
+        NetworkObject netObj = obj.GetComponent<NetworkObject>();
+        if (netObj == null)
+            netObj = obj.AddComponent<NetworkObject>();
 
-            NetworkObject netObj = obj.GetComponent<NetworkObject>();
+        netObj.DestroyWithScene = true;
 
-            if (netObj != null && !netObj.IsSpawned)
-                netObj.Spawn();
+        if (!netObj.IsSpawned)
+            netObj.Spawn();
+
+        ThrowItemSpawnClientRpc(netObj, position, velocity);
+    }
+
+    [ClientRpc]
+    private void ThrowItemSpawnClientRpc(NetworkObjectReference itemRef, Vector3 position, Vector3 velocity)
+    {
+        if (itemRef.TryGet(out NetworkObject itemNetObj))
+        {
+            itemNetObj.transform.SetPositionAndRotation(position, Quaternion.LookRotation(velocity));
+
+            Rigidbody rb = itemNetObj.GetComponent<Rigidbody>();
+            if (rb != null)
+                rb.linearVelocity = velocity;
         }
     }
 
-    private static int GetPrefabIndex(string itemName)
+    private int GetPrefabIndex(string itemName)
     {
-        if (string.IsNullOrEmpty(itemName))
+        if (string.IsNullOrEmpty(itemName) || items == null)
             return -1;
 
-        for (int i = 0; i < ItemNames.Length; i++)
+        for (int i = 0; i < items.Length; i++)
         {
-            if (ItemNames[i] == itemName)
+            if (items[i] != null && items[i].Name == itemName)
                 return i;
         }
 
         return -1;
     }
-
-    private static readonly string[] ItemNames =
-    {
-        "Wrench",
-        "Instructor Book",
-        "Mechanic Wrench",
-        "Electrician Multimeter",
-        "Operator Tablet"
-    };
 
     private static GameObject BuildDropItem(
         Vector3 position,
@@ -589,19 +651,28 @@ public class NetworkInventorySync : NetworkBehaviour
         {
             int prefabIndex = GetPrefabIndex(itemName);
 
-            if (prefabIndex >= 0 && prefabIndex < heldItemPrefabs.Length)
-                prefab = heldItemPrefabs[prefabIndex];
+            if (prefabIndex >= 0 && prefabIndex < items.Length)
+                prefab = items[prefabIndex].WorldDropPrefab;
         }
 
         if (prefab == null)
             return;
 
-        currentHeldVisual = Instantiate(prefab, pivot.position, pivot.rotation, pivot);
+        currentHeldVisual = Instantiate(prefab, pivot);
+        currentHeldVisual.transform.localPosition = Vector3.zero;
+        currentHeldVisual.transform.localRotation = Quaternion.identity;
         currentHeldVisual.transform.localScale = Vector3.one * heldItemScale;
 
         var renderers = currentHeldVisual.GetComponentsInChildren<MeshRenderer>();
-
         foreach (var r in renderers)
             r.enabled = true;
+
+        var rigidbodies = currentHeldVisual.GetComponentsInChildren<Rigidbody>();
+        foreach (var rb in rigidbodies)
+            Destroy(rb);
+
+        var colliders = currentHeldVisual.GetComponentsInChildren<Collider>();
+        foreach (var c in colliders)
+            Destroy(c);
     }
 }

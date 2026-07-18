@@ -97,6 +97,7 @@ public class PlayerController : MonoBehaviour
     private float bodyInitialY;
     private Vector3 leftShoulderInitialEuler;
     private Vector3 rightShoulderInitialEuler;
+    private bool isFrozen;
 
     public bool IsCrouching => isCrouching;
 
@@ -105,10 +106,19 @@ public class PlayerController : MonoBehaviour
     public InteractionHand SelectedInteractionHand => interactionHand;
     public bool IsLocalPlayer => isLocal;
     public float Pitch => pitch;
+    public bool IsFrozen => isFrozen;
     public Interactable CurrentInteractable => currentInteractable;
     public bool HasCurrentInteractable => currentInteractable != null;
     public Inventory PlayerInventory => inventory;
     public Transform ActiveHandHoldPivot => InteractionHandRef != null ? InteractionHandRef.HoldPivot : null;
+
+    public void SetFrozen(bool frozen)
+    {
+        isFrozen = frozen;
+
+        if (characterController != null)
+            characterController.enabled = !frozen;
+    }
 
     private void Awake()
     {
@@ -170,6 +180,9 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         if (!isLocal)
+            return;
+
+        if (isFrozen)
             return;
 
         //HandleCursorEscape();
