@@ -124,7 +124,8 @@ public class Hand : MonoBehaviour
         }
         else if (hasTarget && target != null)
         {
-            desiredPosition = target.position;
+            Vector3 swing = ComputeSwing();
+            desiredPosition = target.position + swing;
             desiredRotation = target.rotation;
         }
         else
@@ -152,7 +153,7 @@ public class Hand : MonoBehaviour
         previousFollowRootPosition = followRoot.position;
     }
 
-    private Vector3 GetIdlePosition()
+    private Vector3 ComputeSwing()
     {
         Vector3 rawVelocity = (followRoot.position - previousFollowRootPosition) / Mathf.Max(Time.deltaTime, 0.001f);
         smoothedVelocity = Vector3.Lerp(smoothedVelocity, rawVelocity, Time.deltaTime * 12f);
@@ -177,9 +178,12 @@ public class Hand : MonoBehaviour
             swing.x += Mathf.Sin(swingTime * (sprintSwaySpeed / swingSpeed)) * sprintSwayAmount * intensity;
         }
 
-        swing = Vector3.ClampMagnitude(swing, 0.3f);
+        return Vector3.ClampMagnitude(swing, 0.3f);
+    }
 
-        return followRoot.position + GetHandRotation() * (idleLocalPosition + swing);
+    private Vector3 GetIdlePosition()
+    {
+        return followRoot.position + GetHandRotation() * (idleLocalPosition + ComputeSwing());
     }
 
     private Vector3 GetRagdollLoosePosition()

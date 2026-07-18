@@ -1359,10 +1359,16 @@ MonoBehaviour:
     WorldDropPrefab: {fileID: 1960839501645163978, guid: 49e42a5a44279fc4a91ba708c23ff927, type: 3}
   - Name: Capsule
     WorldDropPrefab: {fileID: 1960839501645163978, guid: bdd0ae3c7d22bae46bb921087a563fb3, type: 3}
+  - Name: Bomb
+    WorldDropPrefab: {fileID: 7238230355290566502, guid: 3e117487146b8954594b079855b465f2, type: 3}
   - Name: Instructor
     WorldDropPrefab: {fileID: 1960839501645163978, guid: d91c1cc470682c745a8f21b5677398f0, type: 3}
   - Name: Mechanic
     WorldDropPrefab: {fileID: 1960839501645163978, guid: 3c267480e4aa90c489821eadde8578e8, type: 3}
+  - Name: Operator
+    WorldDropPrefab: {fileID: 8221906006782884592, guid: 5bc94bbf563b8a54ebc8b66cf08f233c, type: 3}
+  - Name: Electrician
+    WorldDropPrefab: {fileID: 8679015044782874032, guid: 0c0af600836a027409891ae01f572c65, type: 3}
   heldItemScale: 0.8
   leftEjectPoint: {fileID: 358198167749589956}
   rightEjectPoint: {fileID: 8668837333863770794}

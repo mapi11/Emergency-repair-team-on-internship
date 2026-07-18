@@ -98,6 +98,12 @@ public class PlayerController : MonoBehaviour
     private Vector3 leftShoulderInitialEuler;
     private Vector3 rightShoulderInitialEuler;
     private bool isFrozen;
+    private bool isPointing;
+    private Transform pointTarget;
+    private Transform idleHandTarget;
+
+    private Hand PointingHandRef => interactionHand == InteractionHand.Right ? leftHand : rightHand;
+    private Hand IdleHandRef => interactionHand == InteractionHand.Right ? rightHand : leftHand;
 
     public bool IsCrouching => isCrouching;
 
@@ -175,6 +181,14 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
 
         interactionHand = GameSessionData.SelectedHandIndex == 1 ? InteractionHand.Left : InteractionHand.Right;
+
+        pointTarget = new GameObject("PointTarget").transform;
+        pointTarget.SetParent(cameraPivot != null ? cameraPivot : playerCamera.transform);
+        pointTarget.localPosition = new Vector3(0f, -0.15f, 0.85f);
+
+        idleHandTarget = new GameObject("IdleHandTarget").transform;
+        idleHandTarget.SetParent(transform);
+        idleHandTarget.localPosition = Vector3.zero;
     }
 
     private void Update()
@@ -193,6 +207,7 @@ public class PlayerController : MonoBehaviour
         HandleMovement();
         HandleInteraction();
         HandleInventoryInput();
+        HandlePointing();
         UpdateCrosshair();
     }
 
@@ -592,6 +607,61 @@ public class PlayerController : MonoBehaviour
             if (cachedSync != null)
                 cachedSync.LaunchActiveItem(normalized, direction);
         }
+    }
+
+    private void HandlePointing()
+    {
+        Mouse mouse = Mouse.current;
+
+        if (mouse == null)
+            return;
+
+        if (mouse.rightButton.wasPressedThisFrame)
+            StartPointing();
+        else if (mouse.rightButton.wasReleasedThisFrame)
+            StopPointing();
+    }
+
+    private void StartPointing()
+    {
+        if (isPointing)
+            return;
+
+        isPointing = true;
+
+        Hand pointing = PointingHandRef;
+
+        if (pointing != null && pointTarget != null)
+            pointing.SetTarget(pointTarget);
+
+        Hand idle = IdleHandRef;
+
+        if (idle != null && idleHandTarget != null)
+        {
+            bool idleIsLeft = idle == leftHand;
+
+            idleHandTarget.localPosition = new Vector3(idleIsLeft ? -0.4f : 0.4f, 0.6f, 0.4f);
+            idleHandTarget.localRotation = Quaternion.Euler(0f, 0f, idleIsLeft ? 0 : 0);
+            idle.SetTarget(idleHandTarget);
+        }
+    }
+
+    private void StopPointing()
+    {
+        if (!isPointing)
+            return;
+
+        isPointing = false;
+
+        Hand pointing = PointingHandRef;
+
+        if (pointing != null)
+            pointing.ClearTarget();
+
+        Hand idle = IdleHandRef;
+
+        if (idle != null)
+            idle.ClearTarget();
     }
 
     private bool CanStartThrowActiveItem()

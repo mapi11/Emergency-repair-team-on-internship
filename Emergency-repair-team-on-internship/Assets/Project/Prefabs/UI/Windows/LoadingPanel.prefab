@@ -280,6 +280,10 @@ PrefabInstance:
       propertyPath: m_Colors.m_NormalColor.r
       value: 0.1254902
       objectReference: {fileID: 0}
+    - target: {fileID: 7081840892729805098, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7081840893004531709, guid: d7ab88380a3e9894e9d90494f0927ef3, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
