@@ -1362,7 +1362,7 @@ MonoBehaviour:
   - Name: Instructor
     WorldDropPrefab: {fileID: 1960839501645163978, guid: d91c1cc470682c745a8f21b5677398f0, type: 3}
   - Name: Mechanic
-    WorldDropPrefab: {fileID: 1960839501645163978, guid: 5a1dd318cb9e224438c60e7438dd2384, type: 3}
+    WorldDropPrefab: {fileID: 1960839501645163978, guid: 3c267480e4aa90c489821eadde8578e8, type: 3}
   heldItemScale: 0.8
   leftEjectPoint: {fileID: 358198167749589956}
   rightEjectPoint: {fileID: 8668837333863770794}

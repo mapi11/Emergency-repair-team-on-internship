@@ -193,15 +193,15 @@ public class InventoryUI : MonoBehaviour
         if (slot == null || slot.ObjectImg == null)
             return;
 
-        if (inventory.IsSlotLocked(slotIndex))
-        {
-            slot.ObjectImg.color = lockedSlotColor;
-            return;
-        }
-
         if (slotIndex == inventory.ActiveSlot)
         {
             slot.ObjectImg.color = activeSlotColor;
+            return;
+        }
+
+        if (inventory.IsSlotLocked(slotIndex))
+        {
+            slot.ObjectImg.color = lockedSlotColor;
             return;
         }
 

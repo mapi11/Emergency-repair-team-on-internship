@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
@@ -16,6 +17,7 @@ public class MissionManager : NetworkBehaviour
 
     [Header("Settings")]
     [SerializeField] private float loadingDuration = 1.5f;
+    [SerializeField] private float countdownDuration = 5f;
 
     private static MissionManager instance;
     private static readonly HashSet<string> pendingSceneKeys = new();
@@ -25,6 +27,15 @@ public class MissionManager : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
+
+    public readonly NetworkVariable<int> countdownDisplay = new(0,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
+    private Coroutine countdownCoroutine;
+    private string pendingTransitionType;
+    private Func<bool> conditionsChecker;
 
     public static MissionManager Instance
     {
@@ -115,6 +126,7 @@ public class MissionManager : NetworkBehaviour
     public void StartMissionServerRpc()
     {
         if (IsMissionActive) return;
+        CancelCountdown();
         IsMissionActive = true;
         StartTransitionClientRpc();
         NetworkManager.Singleton.SceneManager.LoadScene(missionSceneName, LoadSceneMode.Single);
@@ -124,9 +136,68 @@ public class MissionManager : NetworkBehaviour
     public void ReturnToLobbyServerRpc()
     {
         if (!IsMissionActive) return;
+        CancelCountdown();
         IsMissionActive = false;
         StartTransitionClientRpc();
         NetworkManager.Singleton.SceneManager.LoadScene(lobbySceneName, LoadSceneMode.Single);
+    }
+
+    public void StartCountdown(string type, Func<bool> checker)
+    {
+        if (countdownCoroutine != null) return;
+        pendingTransitionType = type;
+        conditionsChecker = checker;
+        countdownCoroutine = StartCoroutine(CountdownRoutine());
+    }
+
+    public void CancelCountdown()
+    {
+        if (countdownCoroutine != null)
+        {
+            StopCoroutine(countdownCoroutine);
+            countdownCoroutine = null;
+        }
+        countdownDisplay.Value = 0;
+        pendingTransitionType = null;
+        conditionsChecker = null;
+    }
+
+    private IEnumerator CountdownRoutine()
+    {
+        int remaining = Mathf.CeilToInt(countdownDuration);
+
+        while (remaining > 0)
+        {
+            countdownDisplay.Value = remaining;
+
+            if (conditionsChecker == null || !conditionsChecker())
+            {
+                CancelCountdown();
+                yield break;
+            }
+
+            yield return new WaitForSeconds(1f);
+            remaining--;
+        }
+
+        countdownDisplay.Value = 0;
+        countdownCoroutine = null;
+
+        string type = pendingTransitionType;
+        pendingTransitionType = null;
+
+        if (conditionsChecker != null && !conditionsChecker())
+        {
+            conditionsChecker = null;
+            yield break;
+        }
+
+        conditionsChecker = null;
+
+        if (type == "mission")
+            StartMissionServerRpc();
+        else if (type == "lobby")
+            ReturnToLobbyServerRpc();
     }
 
     [ClientRpc]
@@ -136,11 +207,6 @@ public class MissionManager : NetworkBehaviour
 
         if (loadingScreen != null)
             loadingScreen.Show();
-
-        if (IsMissionActive)
-            LockLocalPlayerRoleSlots();
-        else
-            UnlockLocalPlayerRoleSlots();
     }
 
     private void OnSceneEvent(SceneEvent sceneEvent)
@@ -152,7 +218,21 @@ public class MissionManager : NetworkBehaviour
     private IEnumerator UnfreezeAfterDelay()
     {
         yield return new WaitForSeconds(loadingDuration);
+
+        RearrangeLocalPlayerRoleSlots();
+
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == missionSceneName)
+        {
+            ClearLocalPlayerActiveSlot();
+            LockLocalPlayerRoleSlots();
+        }
+        else
+        {
+            UnlockLocalPlayerRoleSlots();
+        }
+
         SetLocalPlayerFrozen(false);
+
         if (loadingScreen != null)
             loadingScreen.Hide();
     }
@@ -182,5 +262,33 @@ public class MissionManager : NetworkBehaviour
         if (NetworkManager.Singleton.LocalClient?.PlayerObject == null) return;
         var inv = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<Inventory>();
         if (inv != null) inv.UnlockRoleSlots();
+    }
+
+    private void RearrangeLocalPlayerRoleSlots()
+    {
+        if (NetworkManager.Singleton.LocalClient?.PlayerObject == null) return;
+        var inv = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<Inventory>();
+        if (inv != null) inv.RearrangeRoleSlots();
+    }
+
+    private void ClearLocalPlayerActiveSlot()
+    {
+        if (NetworkManager.Singleton.LocalClient?.PlayerObject == null) return;
+        var inv = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<Inventory>();
+        if (inv != null) inv.ClearActiveSlot();
+    }
+
+    [ClientRpc]
+    public void LockRoleSlotsForClientClientRpc(ulong clientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId == clientId)
+            LockLocalPlayerRoleSlots();
+    }
+
+    [ClientRpc]
+    public void UnlockRoleSlotsForClientClientRpc(ulong clientId)
+    {
+        if (NetworkManager.Singleton.LocalClientId == clientId)
+            UnlockLocalPlayerRoleSlots();
     }
 }

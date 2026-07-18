@@ -47,6 +47,9 @@ public class PickableItem : Interactable
     public override void OnNetworkDespawn()
     {
         base.OnNetworkDespawn();
+
+        if (IsServer && !string.IsNullOrEmpty(gameObject.scene.name))
+            MissionManager.RegisterDespawnedSceneObject(GetSceneKey());
     }
 
     public override bool CanInteract(PlayerController player)
@@ -167,7 +170,12 @@ public class PickableItem : Interactable
     public string GetSceneKey()
     {
         var pos = transform.position;
-        return $"{gameObject.name}_{pos.x:F2}_{pos.y:F2}_{pos.z:F2}";
+        return string.Format(
+            System.Globalization.CultureInfo.InvariantCulture,
+            "{0}_{1}_{2:F1}_{3:F1}_{4:F1}",
+            gameObject.scene.name, gameObject.name,
+            pos.x, pos.y, pos.z
+        );
     }
 
     public override void OnHandHold(PlayerController player, float deltaTime) { }
