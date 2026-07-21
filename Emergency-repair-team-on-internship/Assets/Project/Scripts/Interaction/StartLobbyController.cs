@@ -35,6 +35,7 @@ public class StartLobbyController : NetworkBehaviour
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI playerCountText;
     [SerializeField] private TextMeshProUGUI countdownText;
+    [SerializeField] private TextMeshProUGUI noPrimaryRoleText;
 
     [Header("Cleanup")]
     [SerializeField] private GameObject[] objectsToDisableOnStart;
@@ -49,6 +50,11 @@ public class StartLobbyController : NetworkBehaviour
     private readonly NetworkVariable<int> networkTotalPlayers = new();
     private readonly NetworkVariable<int> networkCountdown = new();
     public readonly NetworkVariable<bool> NetworkMissionActive = new();
+    private readonly NetworkVariable<bool> networkHasPrimaryRole = new(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
 
     public bool IsMissionActive => NetworkMissionActive.Value;
 
@@ -60,12 +66,14 @@ public class StartLobbyController : NetworkBehaviour
         {
             StartCoroutine(AnimateDoors(entranceDoors, entranceClosedPos, entranceDoorOffset, true, doorSpeed));
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
             RefreshCounts();
         }
 
         networkPlayersInZone.OnValueChanged += (_, _) => UpdateUI();
         networkTotalPlayers.OnValueChanged += (_, _) => UpdateUI();
         networkCountdown.OnValueChanged += OnCountdownChanged;
+        networkHasPrimaryRole.OnValueChanged += (_, _) => UpdateUI();
 
         UpdateUI();
     }
@@ -73,13 +81,25 @@ public class StartLobbyController : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         if (IsServer)
+        {
             NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
 
     private void OnClientConnected(ulong clientId)
     {
-        if (!NetworkMissionActive.Value) return;
-        LockPlayerRoleSlots(clientId);
+        if (!NetworkMissionActive.Value)
+            RefreshCounts();
+        else
+            LockPlayerRoleSlots(clientId);
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        playersInZone.Remove(clientId);
+        if (!NetworkMissionActive.Value)
+            RefreshCounts();
     }
 
     private void Update()
@@ -142,8 +162,8 @@ public class StartLobbyController : NetworkBehaviour
             CancelCountdown();
         }
 
-        if (changed)
-            RefreshCounts();
+        RefreshCounts();
+        CheckStartConditions();
     }
 
     private void LockPlayerRoleSlots(ulong clientId)
@@ -172,16 +192,31 @@ public class StartLobbyController : NetworkBehaviour
         return false;
     }
 
+    private bool AllPlayersHaveRoles()
+    {
+        foreach (var kvp in NetworkManager.Singleton.ConnectedClients)
+        {
+            var player = kvp.Value.PlayerObject;
+            if (player == null) continue;
+
+            var roleComp = player.GetComponent<NetworkPlayerRole>();
+            if (roleComp == null || roleComp.NetworkRoleMask == 0)
+                return false;
+        }
+        return true;
+    }
+
     private void CheckStartConditions()
     {
         if (countdownCoroutine != null) return;
         if (NetworkMissionActive.Value) return;
 
-        int total = networkTotalPlayers.Value;
-        bool allInside = total > 0 && playersInZone.Count >= total;
+        int total = NetworkManager.Singleton.ConnectedClientsIds.Count;
+        bool allInside = total > 0 && CountPlayersInZoneWithRoles() >= total;
         bool hasPrimary = HasAtLeastOnePrimaryRole();
+        bool allRoles = AllPlayersHaveRoles();
 
-        if (allInside && hasPrimary)
+        if (allInside && hasPrimary && allRoles)
             countdownCoroutine = StartCoroutine(CountdownRoutine());
     }
 
@@ -205,8 +240,8 @@ public class StartLobbyController : NetworkBehaviour
         {
             networkCountdown.Value = remaining;
 
-            int total = networkTotalPlayers.Value;
-            if (total <= 0 || playersInZone.Count < total || !HasAtLeastOnePrimaryRole())
+            int total = NetworkManager.Singleton.ConnectedClientsIds.Count;
+            if (total <= 0 || CountPlayersInZoneWithRoles() < total || !HasAtLeastOnePrimaryRole() || !AllPlayersHaveRoles())
             {
                 CancelCountdown();
                 yield break;
@@ -312,6 +347,9 @@ public class StartLobbyController : NetworkBehaviour
     {
         if (playerCountText != null)
             playerCountText.text = $"{networkPlayersInZone.Value}/{networkTotalPlayers.Value}";
+
+        if (noPrimaryRoleText != null)
+            noPrimaryRoleText.gameObject.SetActive(!networkHasPrimaryRole.Value);
     }
 
     private void OnCountdownChanged(int oldValue, int newValue)
@@ -322,8 +360,33 @@ public class StartLobbyController : NetworkBehaviour
 
     private void RefreshCounts()
     {
-        networkPlayersInZone.Value = playersInZone.Count;
-        networkTotalPlayers.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
+        int newReady = CountPlayersInZoneWithRoles();
+        if (networkPlayersInZone.Value != newReady)
+            networkPlayersInZone.Value = newReady;
+
+        int newTotal = NetworkManager.Singleton.ConnectedClientsIds.Count;
+        if (networkTotalPlayers.Value != newTotal)
+            networkTotalPlayers.Value = newTotal;
+
+        bool hasPrimary = HasAtLeastOnePrimaryRole();
+        if (networkHasPrimaryRole.Value != hasPrimary)
+            networkHasPrimaryRole.Value = hasPrimary;
+    }
+
+    private int CountPlayersInZoneWithRoles()
+    {
+        int count = 0;
+        foreach (var id in playersInZone)
+        {
+            if (NetworkManager.Singleton.ConnectedClients.TryGetValue(id, out var client) &&
+                client.PlayerObject != null)
+            {
+                var roleComp = client.PlayerObject.GetComponent<NetworkPlayerRole>();
+                if (roleComp != null && roleComp.NetworkRoleMask != 0)
+                    count++;
+            }
+        }
+        return count;
     }
 
     public Transform GetReconnectSpawn(ulong clientId)

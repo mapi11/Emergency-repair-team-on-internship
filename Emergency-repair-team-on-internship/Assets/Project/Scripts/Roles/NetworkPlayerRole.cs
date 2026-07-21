@@ -15,6 +15,8 @@ public class NetworkPlayerRole : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    public byte NetworkRoleMask => networkRoleMask.Value;
+
     private static byte RoleToBit(PlayerRole role) => (byte)(1 << ((int)role - 1));
 
     public PlayerRole CurrentRole
