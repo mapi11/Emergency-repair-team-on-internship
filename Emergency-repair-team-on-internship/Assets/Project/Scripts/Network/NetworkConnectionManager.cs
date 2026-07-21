@@ -223,8 +223,6 @@ public class NetworkConnectionManager : MonoBehaviour
             currentJoinCode = await RelayService.Instance.GetJoinCodeAsync(allocation.AllocationId);
             currentJoinCode = SanitizeRelayJoinCode(currentJoinCode);
 
-            GUIUtility.systemCopyBuffer = currentJoinCode;
-
             GameSessionData.JoinCode = currentJoinCode;
             GameSessionData.ConnectionType = relayConnectionType;
 

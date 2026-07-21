@@ -531,7 +531,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   role: 3
-  category: 1
+  category: 2
   roleDisplayName: Electrician
 --- !u!54 &9101804508377918506
 Rigidbody:

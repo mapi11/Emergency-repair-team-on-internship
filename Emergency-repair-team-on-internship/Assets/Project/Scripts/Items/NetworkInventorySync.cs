@@ -55,6 +55,12 @@ public class NetworkInventorySync : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    private readonly NetworkVariable<int> networkMaxRoleItems = new(
+        3,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
     private GameObject currentHeldVisual;
     private readonly Dictionary<int, ulong> serverSlotWorldIds = new();
 
@@ -191,6 +197,7 @@ public class NetworkInventorySync : NetworkBehaviour
         networkActiveItemName.OnValueChanged += OnActiveItemNameChanged;
         networkActiveHand.OnValueChanged += OnActiveHandChanged;
         networkActiveWorldId.OnValueChanged += OnActiveWorldIdChanged;
+        networkMaxRoleItems.OnValueChanged += OnMaxRoleItemsChanged;
 
         UpdateHeldVisual(
             networkActiveSlot.Value,
@@ -218,6 +225,9 @@ public class NetworkInventorySync : NetworkBehaviour
                 entry.SyncInstance = this;
                 entry.LastPosition = transform.position;
             }
+
+            if (inventory != null)
+                networkMaxRoleItems.Value = inventory.GetMaxRoleItems();
         }
     }
 
@@ -529,7 +539,7 @@ public class NetworkInventorySync : NetworkBehaviour
             var roleComponent = GetComponent<NetworkPlayerRole>();
 
             if (roleComponent != null)
-                roleComponent.RequestSetRole(PlayerRole.None);
+                roleComponent.RequestRemoveRole(droppedRole);
         }
 
         if (IsSpawned)
@@ -798,5 +808,16 @@ public class NetworkInventorySync : NetworkBehaviour
         var colliders = currentHeldVisual.GetComponentsInChildren<Collider>();
         foreach (var c in colliders)
             Destroy(c);
+    }
+
+    public void SetMaxRoleItems(int max)
+    {
+        networkMaxRoleItems.Value = max;
+    }
+
+    private void OnMaxRoleItemsChanged(int oldValue, int newValue)
+    {
+        if (inventory != null)
+            inventory.SetMaxRoleItems(newValue);
     }
 }

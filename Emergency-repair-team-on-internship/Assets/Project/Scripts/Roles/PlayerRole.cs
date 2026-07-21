@@ -4,5 +4,6 @@ public enum PlayerRole : byte
     Instructor = 1,
     Mechanic = 2,
     Electrician = 3,
-    Operator = 4
+    Operator = 4,
+    Breaker = 5
 }

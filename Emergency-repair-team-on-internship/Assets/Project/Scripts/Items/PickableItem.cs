@@ -129,7 +129,7 @@ public class PickableItem : Interactable
             var roleComponent = player.GetComponent<NetworkPlayerRole>();
 
             if (roleComponent != null)
-                roleComponent.RequestSetRole(role);
+                roleComponent.RequestAddRole(role);
         }
 
         SetCanInteract(false);

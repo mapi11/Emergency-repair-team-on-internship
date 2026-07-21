@@ -3,6 +3,7 @@ using UnityEngine;
 public class Inventory : MonoBehaviour
 {
     [SerializeField] private int maxSlots = 3;
+    [SerializeField] private int maxRoleItems = 3;
 
     private string[] slots;
     private Sprite[] slotIcons;
@@ -114,7 +115,34 @@ public class Inventory : MonoBehaviour
         if (category == RoleItemCategory.PrimaryRole && HasPrimaryRoleItem())
             return false;
 
+        int limit = maxRoleItems;
+
+        if (NetworkConnectionManager.FixedPlayerCount == 3 && HasPrimaryRoleItem())
+            limit = Mathf.Max(limit, 2);
+
+        if (CountRoleItems() >= limit)
+            return false;
+
         return true;
+    }
+
+    public int GetMaxRoleItems()
+    {
+        return maxRoleItems;
+    }
+
+    public void SetMaxRoleItems(int max)
+    {
+        maxRoleItems = Mathf.Max(1, max);
+    }
+
+    public int CountRoleItems()
+    {
+        int count = 0;
+        for (int i = 0; i < slots.Length; i++)
+            if (slots[i] != null && slotRoleItems[i])
+                count++;
+        return count;
     }
 
     public void RemoveItem(int slot)
@@ -421,22 +449,23 @@ public class Inventory : MonoBehaviour
         return -1;
     }
 
-    public void ExpandTo(int newMax)
+    public void ResizeTo(int newSize)
     {
-        if (newMax <= slots.Length)
-            return;
+        if (newSize < 1) return;
+        if (newSize == slots.Length) return;
 
-        var newSlots = new string[newMax];
-        var newIcons = new Sprite[newMax];
-        var newHeldPrefabs = new GameObject[newMax];
-        var newDropPrefabs = new GameObject[newMax];
+        var newSlots = new string[newSize];
+        var newIcons = new Sprite[newSize];
+        var newHeldPrefabs = new GameObject[newSize];
+        var newDropPrefabs = new GameObject[newSize];
 
-        var newLocked = new bool[newMax];
-        var newRoleItems = new bool[newMax];
-        var newRoles = new PlayerRole[newMax];
-        var newRoleItemCategories = new RoleItemCategory[newMax];
+        var newLocked = new bool[newSize];
+        var newRoleItems = new bool[newSize];
+        var newRoles = new PlayerRole[newSize];
+        var newRoleItemCategories = new RoleItemCategory[newSize];
 
-        for (int i = 0; i < slots.Length; i++)
+        int copyLen = Mathf.Min(slots.Length, newSize);
+        for (int i = 0; i < copyLen; i++)
         {
             newSlots[i] = slots[i];
             newIcons[i] = slotIcons[i];
@@ -459,7 +488,16 @@ public class Inventory : MonoBehaviour
         slotRoles = newRoles;
         slotRoleItemCategories = newRoleItemCategories;
 
-        maxSlots = newMax;
+        maxSlots = newSize;
+
+        if (activeSlot >= newSize)
+            ClearActiveSlot();
+    }
+
+    public void ExpandTo(int newMax)
+    {
+        if (newMax > slots.Length)
+            ResizeTo(newMax);
     }
 
     public void ClearAll()

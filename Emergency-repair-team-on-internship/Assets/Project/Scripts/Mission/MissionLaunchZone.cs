@@ -130,7 +130,7 @@ public class MissionLaunchZone : NetworkBehaviour
 
             var roleComp = networkObject.GetComponent<NetworkPlayerRole>();
             if (roleComp != null)
-                roleComp.OnRoleChangedEvent += OnPlayerRoleChanged;
+                roleComp.OnRoleMaskChangedEvent += OnPlayerRoleChanged;
 
             CheckLaunchConditions();
         }
@@ -157,7 +157,7 @@ public class MissionLaunchZone : NetworkBehaviour
 
             var roleComp = networkObject.GetComponent<NetworkPlayerRole>();
             if (roleComp != null)
-                roleComp.OnRoleChangedEvent -= OnPlayerRoleChanged;
+                roleComp.OnRoleMaskChangedEvent -= OnPlayerRoleChanged;
 
             MissionManager.Instance?.CancelCountdown();
         }
@@ -167,7 +167,7 @@ public class MissionLaunchZone : NetworkBehaviour
         }
     }
 
-    private void OnPlayerRoleChanged(PlayerRole oldRole, PlayerRole newRole)
+    private void OnPlayerRoleChanged(byte oldMask, byte newMask)
     {
         CheckLaunchConditions();
     }
@@ -207,7 +207,7 @@ public class MissionLaunchZone : NetworkBehaviour
         {
             var roleComp = playerObj.GetComponent<NetworkPlayerRole>();
             if (roleComp != null)
-                roleComp.OnRoleChangedEvent -= OnPlayerRoleChanged;
+                roleComp.OnRoleMaskChangedEvent -= OnPlayerRoleChanged;
         }
 
         MissionManager.Instance?.CancelCountdown();

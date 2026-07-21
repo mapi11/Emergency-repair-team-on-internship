@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 using TMPro;
@@ -42,6 +43,7 @@ public class PreStartLobbyController : NetworkBehaviour
     private Vector3[] entranceClosedPos;
     private Vector3[] exitClosedPos;
     private readonly HashSet<ulong> playersInside = new();
+    private int totalPlayerCount;
     private Coroutine countdownCoroutine;
     private float overlapCheckTimer;
 
@@ -248,7 +250,6 @@ public class PreStartLobbyController : NetworkBehaviour
 
     private IEnumerator CountdownRoutine()
     {
-        StartCoroutine(AnimateDoors(entranceDoors, entranceClosedPos, entranceDoorOffset, false, doorSpeed));
         StartCoroutine(AnimateDoors(exitDoors, exitClosedPos, exitDoorOffset, false, doorSpeed));
 
         int remaining = Mathf.CeilToInt(countdownDuration);
@@ -284,9 +285,50 @@ public class PreStartLobbyController : NetworkBehaviour
 
         NetworkConnectionManager.SnapshotPreMissionProfiles();
         NetworkConnectionManager.IsLobbyLocked = true;
-        NetworkConnectionManager.FixedPlayerCount = playersInside.Count;
+        totalPlayerCount = playersInside.Count;
+        NetworkConnectionManager.FixedPlayerCount = totalPlayerCount;
 
+        SyncPlayerCountClientRpc(totalPlayerCount);
+        ApplyRoleItemLimits();
+        ActivateInventoryClientRpc(totalPlayerCount);
+
+        StartCoroutine(AnimateDoors(entranceDoors, entranceClosedPos, entranceDoorOffset, false, doorSpeed));
         StartCoroutine(AnimateDoors(exitDoors, exitClosedPos, exitDoorOffset, true, doorSpeed));
+    }
+
+    private void ApplyRoleItemLimits()
+    {
+        var clients = NetworkManager.Singleton.ConnectedClients.Values
+            .OrderBy(c => c.ClientId)
+            .ToList();
+
+        int total = clients.Count;
+
+        for (int i = 0; i < clients.Count; i++)
+        {
+            var player = clients[i].PlayerObject;
+            if (player == null) continue;
+
+            var sync = player.GetComponent<NetworkInventorySync>();
+            if (sync == null) continue;
+
+            int max;
+
+            if (total == 1)
+            {
+                max = 3;
+            }
+            else if (total == 2)
+            {
+                max = 2;
+            }
+            else
+            {
+                max = 1;
+            }
+
+            sync.SetMaxRoleItems(max);
+        }
     }
 
     private void OnPlayerDisconnected(ulong clientId)
@@ -299,9 +341,67 @@ public class PreStartLobbyController : NetworkBehaviour
     private void OnClientConnected(ulong clientId)
     {
         if (isLockedIn)
+        {
+            var rpcParams = new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams
+                {
+                    TargetClientIds = new ulong[] { clientId }
+                }
+            };
+            SyncPlayerCountClientRpc(totalPlayerCount, rpcParams);
+            ActivateInventoryClientRpc(totalPlayerCount, rpcParams);
+
+            var reconnected = NetworkManager.Singleton.ConnectedClients[clientId]?.PlayerObject;
+            if (reconnected != null)
+            {
+                var sync = reconnected.GetComponent<NetworkInventorySync>();
+                if (sync != null)
+                {
+                    int max = totalPlayerCount switch
+                    {
+                        1 => 3,
+                        2 => 2,
+                        _ => 1
+                    };
+                    sync.SetMaxRoleItems(max);
+                }
+            }
             return;
+        }
         RefreshCounts();
         CheckCountdown();
+    }
+
+    [ClientRpc]
+    private void SyncPlayerCountClientRpc(int count, ClientRpcParams clientRpcParams = default)
+    {
+        NetworkConnectionManager.FixedPlayerCount = count;
+    }
+
+    [ClientRpc]
+    private void ActivateInventoryClientRpc(int totalPlayers, ClientRpcParams clientRpcParams = default)
+    {
+        var net = NetworkManager.Singleton;
+        if (net == null || !net.IsClient) return;
+
+        var localObj = net.LocalClient?.PlayerObject;
+        if (localObj == null) return;
+
+        int slotCount = totalPlayers switch
+        {
+            1 => 5,
+            2 => 4,
+            _ => 3
+        };
+
+        var inventory = localObj.GetComponent<Inventory>();
+        if (inventory != null)
+            inventory.ResizeTo(slotCount);
+
+        var invUI = FindFirstObjectByType<InventoryUI>();
+        if (invUI != null)
+            invUI.Initialize(inventory);
     }
 
     public Transform GetReconnectSpawn(ulong clientId)

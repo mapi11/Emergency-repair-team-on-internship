@@ -130,7 +130,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   role: 2
-  category: 1
+  category: 2
   roleDisplayName: Mechanic
 --- !u!54 &6478682367764600626
 Rigidbody:

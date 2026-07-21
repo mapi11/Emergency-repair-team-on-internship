@@ -5,96 +5,120 @@ using UnityEngine.UI;
 public class NetworkPlayerRole : NetworkBehaviour
 {
     [Header("UI")]
-    [SerializeField] private Image roleIcon;
+    [SerializeField] private Transform roleIconsContainer;
+    [SerializeField] private GameObject roleIconPrefab;
     [SerializeField] private Sprite[] roleSprites;
 
-    private readonly NetworkVariable<byte> networkRole = new(
+    private readonly NetworkVariable<byte> networkRoleMask = new(
         0,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
 
-    public PlayerRole CurrentRole => (PlayerRole)networkRole.Value;
+    private static byte RoleToBit(PlayerRole role) => (byte)(1 << ((int)role - 1));
 
-    public event System.Action<PlayerRole, PlayerRole> OnRoleChangedEvent;
-
-    private void Awake()
+    public PlayerRole CurrentRole
     {
-        if (roleIcon != null)
-            roleIcon.enabled = false;
+        get
+        {
+            byte mask = networkRoleMask.Value;
+            if (mask == 0) return PlayerRole.None;
+            int max = roleSprites != null ? roleSprites.Length : 4;
+            for (int i = 1; i <= max; i++)
+                if ((mask & (1 << (i - 1))) != 0)
+                    return (PlayerRole)i;
+            return PlayerRole.None;
+        }
     }
+
+    public event System.Action<byte, byte> OnRoleMaskChangedEvent;
 
     public override void OnNetworkSpawn()
     {
-        networkRole.OnValueChanged += OnRoleChanged;
-        UpdateIcon(networkRole.Value);
+        networkRoleMask.OnValueChanged += OnRoleMaskChanged;
+        RebuildIcons(networkRoleMask.Value);
     }
 
     public override void OnNetworkDespawn()
     {
-        networkRole.OnValueChanged -= OnRoleChanged;
+        networkRoleMask.OnValueChanged -= OnRoleMaskChanged;
     }
 
-    public void RequestSetRole(PlayerRole role)
+    public void RequestAddRole(PlayerRole role)
     {
-        if (!IsSpawned)
-            return;
-
+        if (!IsSpawned || role == PlayerRole.None) return;
+        byte bit = RoleToBit(role);
         if (IsServer)
-        {
-            SetRoleOnServer((byte)role, OwnerClientId);
-        }
+            networkRoleMask.Value |= bit;
         else
-        {
-            RequestSetRoleServerRpc((byte)role);
-        }
+            AddRoleServerRpc(bit);
+    }
+
+    public void RequestRemoveRole(PlayerRole role)
+    {
+        if (!IsSpawned || role == PlayerRole.None) return;
+        byte bit = RoleToBit(role);
+        if (IsServer)
+            networkRoleMask.Value &= (byte)~bit;
+        else
+            RemoveRoleServerRpc(bit);
+    }
+
+    public bool HasRole(PlayerRole role)
+    {
+        return (networkRoleMask.Value & RoleToBit(role)) != 0;
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void RequestSetRoleServerRpc(byte role, ServerRpcParams rpcParams = default)
+    private void AddRoleServerRpc(byte bit, ServerRpcParams rpcParams = default)
     {
-        ulong senderClientId = rpcParams.Receive.SenderClientId;
-
-        if (senderClientId != OwnerClientId)
-            return;
-
-        SetRoleOnServer(role, senderClientId);
+        if (rpcParams.Receive.SenderClientId != OwnerClientId) return;
+        networkRoleMask.Value |= bit;
     }
 
-    private void SetRoleOnServer(byte role, ulong senderClientId)
+    [ServerRpc(RequireOwnership = false)]
+    private void RemoveRoleServerRpc(byte bit, ServerRpcParams rpcParams = default)
     {
-        if (senderClientId != OwnerClientId)
-            return;
-
-        networkRole.Value = role;
+        if (rpcParams.Receive.SenderClientId != OwnerClientId) return;
+        networkRoleMask.Value &= (byte)~bit;
     }
 
-    private void OnRoleChanged(byte oldRole, byte newRole)
+    private void OnRoleMaskChanged(byte oldMask, byte newMask)
     {
-        UpdateIcon(newRole);
-        OnRoleChangedEvent?.Invoke((PlayerRole)oldRole, (PlayerRole)newRole);
+        RebuildIcons(newMask);
+        OnRoleMaskChangedEvent?.Invoke(oldMask, newMask);
     }
 
-    private void UpdateIcon(byte role)
+    private void RebuildIcons(byte mask)
     {
-        if (roleIcon == null)
-            return;
+        if (roleIconsContainer == null) return;
 
-        if (role == 0 || roleSprites == null || role - 1 >= roleSprites.Length)
+        for (int i = roleIconsContainer.childCount - 1; i >= 0; i--)
         {
-            roleIcon.enabled = false;
+            var child = roleIconsContainer.GetChild(i);
+            if (child != null)
+                Destroy(child.gameObject);
+        }
+
+        if (mask == 0 || roleIconPrefab == null)
+        {
+            roleIconsContainer.gameObject.SetActive(false);
             return;
         }
 
-        Sprite sprite = roleSprites[role - 1];
+        roleIconsContainer.gameObject.SetActive(true);
 
-        if (sprite == null)
+        int max = roleSprites != null ? roleSprites.Length : 4;
+        for (int i = 1; i <= max; i++)
         {
-            roleIcon.enabled = false;
-            return;
+            if ((mask & (1 << (i - 1))) != 0)
+            {
+                var iconGO = Instantiate(roleIconPrefab, roleIconsContainer);
+                iconGO.name = $"RoleIcon_{(PlayerRole)i}";
+                var img = iconGO.GetComponent<Image>();
+                if (img != null && roleSprites != null && i - 1 < roleSprites.Length)
+                    img.sprite = roleSprites[i - 1];
+            }
         }
-
-        roleIcon.sprite = sprite;
-        roleIcon.enabled = true;
     }
 }

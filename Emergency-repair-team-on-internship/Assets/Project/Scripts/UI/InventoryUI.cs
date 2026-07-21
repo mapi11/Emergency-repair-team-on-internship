@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -31,12 +32,44 @@ public class InventoryUI : MonoBehaviour
 
     private void Start()
     {
-        Inventory localInv = FindLocalPlayerInventory();
+        var netObj = GetComponentInParent<NetworkObject>();
+        if (netObj != null && !netObj.IsOwner)
+        {
+            gameObject.SetActive(false);
+            return;
+        }
 
+        Inventory localInv = FindLocalPlayerInventory();
         if (localInv != null)
             inventory = localInv;
+    }
 
-        if (inventory == null || slotsParent == null)
+    public void Initialize(Inventory newInventory)
+    {
+        if (newInventory == null)
+            return;
+
+        if (inventory != null && inventory != newInventory)
+        {
+            inventory.OnSlotChanged -= OnSlotChanged;
+            inventory.OnActiveSlotChanged -= OnActiveSlotChanged;
+            inventory.OnSlotIconChanged -= OnSlotIconChanged;
+            inventory.OnSlotLockChanged -= OnSlotLockChanged;
+        }
+
+        inventory = newInventory;
+
+        if (slots != null)
+        {
+            foreach (var slot in slots)
+            {
+                if (slot != null && slot.gameObject != null)
+                    Destroy(slot.gameObject);
+            }
+            slots = null;
+        }
+
+        if (slotsParent == null)
             return;
 
         CreateSlots();
@@ -54,6 +87,9 @@ public class InventoryUI : MonoBehaviour
         }
 
         OnActiveSlotChanged(inventory.ActiveSlot);
+
+        if (!gameObject.activeSelf)
+            gameObject.SetActive(true);
     }
 
     private void OnDestroy()
