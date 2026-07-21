@@ -356,7 +356,6 @@ GameObject:
   - component: {fileID: 4700878351522981903}
   - component: {fileID: 5910709871044238800}
   - component: {fileID: 2204571822930541608}
-  - component: {fileID: 7605214605421589663}
   m_Layer: 5
   m_Name: ColorPreview
   m_TagString: Untagged
@@ -424,24 +423,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &7605214605421589663
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4271509389276491863}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2d77b1ef764b544daf4171db669a908, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  leftEyeCenter: {fileID: 4118423383309430600}
-  rightEyeCenter: {fileID: 2085463461324384672}
-  leftPupil: {fileID: 4704814119793575073}
-  rightPupil: {fileID: 6755065477581049379}
-  maxPupilOffset: 20
-  eyeTrackingSpeed: 8
 --- !u!1 &4682754677687621218
 GameObject:
   m_ObjectHideFlags: 0
@@ -643,6 +624,7 @@ GameObject:
   - component: {fileID: 8516050518669431840}
   - component: {fileID: 4040989638979668073}
   - component: {fileID: 3097856116696840530}
+  - component: {fileID: 7885791398143466925}
   m_Layer: 5
   m_Name: TitleText
   m_TagString: Untagged
@@ -769,6 +751,46 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!114 &7885791398143466925
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5983509545536386822}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 56eb0353ae6e5124bb35b17aff880f16, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_StringReference:
+    m_TableReference:
+      m_TableCollectionName: GUID:3d1a26612b7a6004fa0d0c2be10c1d75
+    m_TableEntryReference:
+      m_KeyId: 18022796812288
+      m_Key: 
+    m_FallbackState: 0
+    m_WaitForCompletion: 0
+    m_LocalVariables: []
+  m_FormatArguments: []
+  m_UpdateString:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 3097856116696840530}
+        m_TargetAssemblyTypeName: TMPro.TextMeshProUGUI, Unity.TextMeshPro
+        m_MethodName: set_text
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  references:
+    version: 2
+    RefIds: []
 --- !u!1 &6572836894839996784
 GameObject:
   m_ObjectHideFlags: 0

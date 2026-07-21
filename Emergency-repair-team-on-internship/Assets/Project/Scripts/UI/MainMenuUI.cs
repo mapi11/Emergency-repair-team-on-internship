@@ -1,6 +1,8 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 
 public class MainMenuUI : MonoBehaviour
 {
@@ -13,6 +15,9 @@ public class MainMenuUI : MonoBehaviour
     [SerializeField] private TMP_Text colorText;
     [SerializeField] private TMP_Dropdown colorDropdown;
     [SerializeField] private TMP_Dropdown handDropdown;
+
+    [Header("Language")]
+    [SerializeField] private TMP_Dropdown languageDropdown;
 
     [Header("Voice")]
     [SerializeField] private TMP_Dropdown microphoneDropdown;
@@ -40,6 +45,16 @@ public class MainMenuUI : MonoBehaviour
 
     private NetworkConnectionManager connectionManager;
 
+    private readonly LocalizedString statusStr = new("UI_Table", "Status");
+    private readonly LocalizedString noMicrophoneStr = new("UI_Table", "MicrophoneNotFound");
+    private readonly LocalizedString microphoneLabelStr = new("UI_Table", "MicrophoneLabel");
+    private readonly LocalizedString colorLabelStr = new("UI_Table", "ColorLabel");
+    private readonly LocalizedString noJoinCodeStr = new("UI_Table", "NoJoinCode");
+    private readonly LocalizedString copiedCodeStr = new("UI_Table", "CopiedCode");
+    private string pendingStatusValue;
+    private string pendingMicrophoneName;
+    private LocalizedString currentStatusSource;
+
     private void Awake()
     {
         connectionManager = NetworkConnectionManager.Instance;
@@ -60,12 +75,16 @@ public class MainMenuUI : MonoBehaviour
         }
 
         connectionManager.StatusChanged += OnStatusChanged;
+        LocalizationSettings.SelectedLocaleChanged += OnSelectedLocaleChanged;
 
+        RestoreSavedLocale();
         InitializeFields();
         BindButtons();
         RefreshColor();
         RefreshFooter();
         SetStatus(connectionManager.Status);
+
+        InitLanguageDropdown();
     }
 
     private void OnDestroy()
@@ -73,6 +92,74 @@ public class MainMenuUI : MonoBehaviour
         if (connectionManager != null)
         {
             connectionManager.StatusChanged -= OnStatusChanged;
+        }
+
+        LocalizationSettings.SelectedLocaleChanged -= OnSelectedLocaleChanged;
+    }
+
+    public const string LocalePrefsKey = "Locale";
+
+    private void RestoreSavedLocale()
+    {
+        if (!PlayerPrefs.HasKey(LocalePrefsKey)) return;
+
+        string saved = PlayerPrefs.GetString(LocalePrefsKey);
+        var locales = LocalizationSettings.AvailableLocales.Locales;
+        for (int i = 0; i < locales.Count; i++)
+        {
+            if (locales[i].Identifier.Code == saved)
+            {
+                LocalizationSettings.SelectedLocale = locales[i];
+                break;
+            }
+        }
+    }
+
+    private void InitLanguageDropdown()
+    {
+        if (languageDropdown == null) return;
+
+        languageDropdown.ClearOptions();
+
+        var locales = LocalizationSettings.AvailableLocales.Locales;
+        var options = new System.Collections.Generic.List<string>();
+        int selected = 0;
+
+        for (int i = 0; i < locales.Count; i++)
+        {
+            options.Add(locales[i].Identifier.CultureInfo?.NativeName ?? locales[i].LocaleName);
+            if (locales[i] == LocalizationSettings.SelectedLocale)
+                selected = i;
+        }
+
+        languageDropdown.AddOptions(options);
+        languageDropdown.SetValueWithoutNotify(selected);
+        languageDropdown.onValueChanged.AddListener(OnLanguageChanged);
+    }
+
+    private void OnSelectedLocaleChanged(Locale locale)
+    {
+        RefreshAllLocalizedText();
+    }
+
+    private void RefreshAllLocalizedText()
+    {
+        SetStatus(connectionManager != null ? connectionManager.Status : "");
+        RefreshColor();
+        RefreshMicrophoneText();
+        RefreshFooter();
+        InitColorDropdown();
+        InitHandDropdown();
+    }
+
+    private void OnLanguageChanged(int index)
+    {
+        var locales = LocalizationSettings.AvailableLocales.Locales;
+        if (index >= 0 && index < locales.Count)
+        {
+            LocalizationSettings.SelectedLocale = locales[index];
+            PlayerPrefs.SetString(LocalePrefsKey, locales[index].Identifier.Code);
+            PlayerPrefs.Save();
         }
     }
 
@@ -128,11 +215,14 @@ public class MainMenuUI : MonoBehaviour
 
         for (int i = 0; i < GameSessionData.ColorNames.Length; i++)
         {
-            options.Add(new TMP_Dropdown.OptionData(GameSessionData.ColorNames[i]));
+            string key = "Color_" + GameSessionData.ColorNames[i];
+            string localized = LocalizationSettings.StringDatabase.GetLocalizedString("UI_Table", key);
+            options.Add(new TMP_Dropdown.OptionData(localized));
         }
 
         colorDropdown.AddOptions(options);
         colorDropdown.SetValueWithoutNotify(GameSessionData.SelectedColorIndex);
+        colorDropdown.onValueChanged.RemoveAllListeners();
         colorDropdown.onValueChanged.AddListener(OnColorChanged);
     }
 
@@ -143,8 +233,11 @@ public class MainMenuUI : MonoBehaviour
 
         handDropdown.ClearOptions();
 
-        handDropdown.AddOptions(new System.Collections.Generic.List<string> { "Right", "Left" });
+        string right = LocalizationSettings.StringDatabase.GetLocalizedString("UI_Table", "Hand_Right");
+        string left = LocalizationSettings.StringDatabase.GetLocalizedString("UI_Table", "Hand_Left");
+        handDropdown.AddOptions(new System.Collections.Generic.List<string> { right, left });
         handDropdown.SetValueWithoutNotify(GameSessionData.SelectedHandIndex);
+        handDropdown.onValueChanged.RemoveAllListeners();
         handDropdown.onValueChanged.AddListener(OnHandChanged);
     }
 
@@ -269,13 +362,14 @@ public class MainMenuUI : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(code))
         {
-            SetStatus("No Join Code to copy");
+            SetStatusFromLocalized(noJoinCodeStr);
             return;
         }
 
         GUIUtility.systemCopyBuffer = code;
 
-        SetStatus($"Copied Join Code: {code}");
+        copiedCodeStr.Arguments = new object[] { code };
+        SetStatusFromLocalized(copiedCodeStr);
     }
 
     private void ApplyLocalConnectionFields()
@@ -383,13 +477,20 @@ public class MainMenuUI : MonoBehaviour
 
         if (string.IsNullOrWhiteSpace(microphoneName))
         {
-            microphoneText.text = "Microphone: not selected";
+            noMicrophoneStr.StringChanged -= OnMicrophoneTextChanged;
+            noMicrophoneStr.StringChanged += OnMicrophoneTextChanged;
+            noMicrophoneStr.RefreshString();
         }
         else
         {
-            microphoneText.text = $"Microphone: {microphoneName}";
+            microphoneLabelStr.Arguments = new object[] { microphoneName };
+            microphoneLabelStr.StringChanged -= OnMicrophoneTextChanged;
+            microphoneLabelStr.StringChanged += OnMicrophoneTextChanged;
+            microphoneLabelStr.RefreshString();
         }
     }
+
+    private void OnMicrophoneTextChanged(string s) => microphoneText.text = s;
 
     private string GetProfileId()
     {
@@ -432,9 +533,14 @@ public class MainMenuUI : MonoBehaviour
 
         if (colorText != null)
         {
-            colorText.text = $"Color: R{color.r} G{color.g} B{color.b}";
+            colorLabelStr.Arguments = new object[] { color.r, color.g, color.b };
+            colorLabelStr.StringChanged -= OnColorLabelChanged;
+            colorLabelStr.StringChanged += OnColorLabelChanged;
+            colorLabelStr.RefreshString();
         }
     }
+
+    private void OnColorLabelChanged(string s) => colorText.text = s;
 
     private void RefreshFooter()
     {
@@ -446,15 +552,49 @@ public class MainMenuUI : MonoBehaviour
 
     private void OnStatusChanged(string newStatus)
     {
-        SetStatus(newStatus);
+        pendingStatusValue = newStatus;
+        ApplyStatusText();
     }
+
+    private void ApplyStatusText()
+    {
+        if (statusText == null) return;
+
+        if (currentStatusSource != null && currentStatusSource != statusStr)
+        {
+            currentStatusSource.StringChanged -= OnStatusTextChanged;
+            currentStatusSource = null;
+        }
+
+        statusStr.Arguments = new object[] { pendingStatusValue ?? "" };
+        statusStr.StringChanged -= OnStatusTextChanged;
+        statusStr.StringChanged += OnStatusTextChanged;
+        statusStr.RefreshString();
+        currentStatusSource = statusStr;
+    }
+
+    private void OnStatusTextChanged(string s) => statusText.text = s;
 
     private void SetStatus(string value)
     {
-        if (statusText != null)
+        pendingStatusValue = value;
+        ApplyStatusText();
+    }
+
+    private void SetStatusFromLocalized(LocalizedString locStr)
+    {
+        if (statusText == null) return;
+
+        if (currentStatusSource != null)
         {
-            statusText.text = $"Status: {value}";
+            currentStatusSource.StringChanged -= OnStatusTextChanged;
+            currentStatusSource = null;
         }
+
+        locStr.StringChanged -= OnStatusTextChanged;
+        locStr.StringChanged += OnStatusTextChanged;
+        locStr.RefreshString();
+        currentStatusSource = locStr;
     }
 
     private static bool ColorsMatch(Color32 a, Color32 b)

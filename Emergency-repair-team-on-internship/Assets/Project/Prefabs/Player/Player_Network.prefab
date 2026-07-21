@@ -206,7 +206,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: New Text
+  m_text: Nickname
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: e73a58f6e2794ae7b1b7e50b7fb811b0, type: 2}
@@ -233,7 +233,7 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 0.45
+  m_fontSize: 0.4
   m_fontSizeBase: 36
   m_fontWeight: 400
   m_enableAutoSizing: 1
@@ -1084,6 +1084,18 @@ PrefabInstance:
       propertyPath: m_Parameters.widthCurve.m_Curve.Array.data[0].value
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 908744296311666315, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_Spacing
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 908744296311666315, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_ChildAlignment
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 908744296311666315, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_ChildForceExpandWidth
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 1221688299579084739, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -1155,6 +1167,10 @@ PrefabInstance:
     - target: {fileID: 3186245754469773085, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: maxChargeTime
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3740384422044026713, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 666
       objectReference: {fileID: 0}
     - target: {fileID: 3820745504337309081, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_PixelsPerUnitMultiplier
@@ -1372,8 +1388,10 @@ MonoBehaviour:
     WorldDropPrefab: {fileID: 8221906006782884592, guid: 5bc94bbf563b8a54ebc8b66cf08f233c, type: 3}
   - Name: Electrician
     WorldDropPrefab: {fileID: 8679015044782874032, guid: 0c0af600836a027409891ae01f572c65, type: 3}
-  - Name: Breaker
+  - Name: Destroyer
     WorldDropPrefab: {fileID: 2291604343843313189, guid: e80592b31a7ad074584c907d55357823, type: 3}
+  - Name: Instructor
+    WorldDropPrefab: {fileID: 1960839501645163978, guid: d91c1cc470682c745a8f21b5677398f0, type: 3}
   heldItemScale: 0.8
   leftEjectPoint: {fileID: 358198167749589956}
   rightEjectPoint: {fileID: 8668837333863770794}

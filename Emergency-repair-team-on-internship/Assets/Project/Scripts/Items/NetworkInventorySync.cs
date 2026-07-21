@@ -38,8 +38,8 @@ public class NetworkInventorySync : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
-    private readonly NetworkVariable<FixedString32Bytes> networkActiveItemName = new(
-        new FixedString32Bytes(""),
+    private readonly NetworkVariable<FixedString64Bytes> networkActiveItemName = new(
+        new FixedString64Bytes(""),
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
@@ -449,7 +449,7 @@ public class NetworkInventorySync : NetworkBehaviour
         if (!IsSpawned)
             return;
 
-        UpdateActiveSlotServerRpc(slot, new FixedString32Bytes(itemName ?? ""), handIndex);
+        UpdateActiveSlotServerRpc(slot, new FixedString64Bytes(itemName ?? ""), handIndex);
 
         if (IsServer)
         {
@@ -478,7 +478,7 @@ public class NetworkInventorySync : NetworkBehaviour
         string itemName = slot >= 0 ? inventory.GetItemAtSlot(slot) : null;
 
         networkActiveSlot.Value = slot;
-        networkActiveItemName.Value = new FixedString32Bytes(itemName ?? "");
+        networkActiveItemName.Value = new FixedString64Bytes(itemName ?? "");
         networkActiveHand.Value = handIndex;
 
         if (IsServer)
@@ -621,7 +621,7 @@ public class NetworkInventorySync : NetworkBehaviour
                 ? (byte)(playerController.SelectedInteractionHand == PlayerController.InteractionHand.Right ? 0 : 1)
                 : (byte)0;
 
-            LaunchServerRpc(slot, new FixedString32Bytes(itemName), handIndex, velocity);
+            LaunchServerRpc(slot, new FixedString64Bytes(itemName), handIndex, velocity);
             RemoveSlotWorldIdServerRpc(slot);
 
             if (heldVisual != null)
@@ -665,7 +665,7 @@ public class NetworkInventorySync : NetworkBehaviour
     [ServerRpc]
     private void LaunchServerRpc(
         int slot,
-        FixedString32Bytes itemName,
+        FixedString64Bytes itemName,
         byte handIndex,
         Vector3 velocity
     )
@@ -785,7 +785,7 @@ public class NetworkInventorySync : NetworkBehaviour
     [ServerRpc]
     private void UpdateActiveSlotServerRpc(
         int slot,
-        FixedString32Bytes itemName,
+        FixedString64Bytes itemName,
         byte handIndex
     )
     {
@@ -807,8 +807,8 @@ public class NetworkInventorySync : NetworkBehaviour
     }
 
     private void OnActiveItemNameChanged(
-        FixedString32Bytes oldValue,
-        FixedString32Bytes newValue
+        FixedString64Bytes oldValue,
+        FixedString64Bytes newValue
     )
     {
         int slot = networkActiveSlot.Value;

@@ -115,6 +115,7 @@ MonoBehaviour:
   currentUserClientIdDebug: 18446744073709551615
   itemName: Mechanic
   inventoryIcon: {fileID: -1010077106, guid: 7f0c9023a4294ab499c4fe1a0297a7e7, type: 3}
+  localizationKey: Role_Mechanic
   heldVisualPrefab: {fileID: 0}
   roleItem: {fileID: 4743954588069985903}
 --- !u!114 &4743954588069985903

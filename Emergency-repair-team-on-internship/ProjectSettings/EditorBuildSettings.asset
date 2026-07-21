@@ -15,5 +15,7 @@ EditorBuildSettings:
     path: Assets/Project/Scenes/MissionScene.unity
     guid: dd1b8459da17dbff3546ce6c0b07c560
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: a8931359d75f6c847ae5aa1689450035, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.localization.settings: {fileID: 11400000, guid: 00eb2a116bf75f7439588bbfb8c748b5, type: 2}
   m_UseUCBPForAssetBundles: 0

@@ -16,6 +16,7 @@ public class PickableItem : Interactable
     [Header("Pickup")]
     [SerializeField] private string itemName = "Wrench";
     [SerializeField] private Sprite inventoryIcon;
+    [SerializeField] private string localizationKey;
 
     [Header("Held Visual")]
     [SerializeField] private GameObject heldVisualPrefab;
@@ -28,6 +29,7 @@ public class PickableItem : Interactable
     public GameObject HeldVisualPrefab => heldVisualPrefab;
 
     public static readonly System.Collections.Generic.Dictionary<string, Sprite> RegisteredIcons = new();
+    public static readonly System.Collections.Generic.Dictionary<string, string> LocalizationKeys = new();
 
     public void Setup(string name, Sprite icon)
     {
@@ -42,6 +44,9 @@ public class PickableItem : Interactable
 
         if (!string.IsNullOrEmpty(itemName) && inventoryIcon != null && !RegisteredIcons.ContainsKey(itemName))
             RegisteredIcons[itemName] = inventoryIcon;
+
+        if (!string.IsNullOrEmpty(itemName) && !string.IsNullOrEmpty(localizationKey) && !LocalizationKeys.ContainsKey(itemName))
+            LocalizationKeys[itemName] = localizationKey;
     }
 
     //private void Awake()

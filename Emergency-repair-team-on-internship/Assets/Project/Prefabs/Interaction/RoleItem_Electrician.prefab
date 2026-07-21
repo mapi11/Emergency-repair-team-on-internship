@@ -516,6 +516,7 @@ MonoBehaviour:
   currentUserClientIdDebug: 18446744073709551615
   itemName: Electrician
   inventoryIcon: {fileID: 471896488, guid: fc9e1e494cd13bb4aab887f9215670ac, type: 3}
+  localizationKey: Role_Electrician
   heldVisualPrefab: {fileID: 0}
   roleItem: {fileID: 716667636804231170}
 --- !u!114 &716667636804231170

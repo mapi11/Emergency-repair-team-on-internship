@@ -1,0 +1,139 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: UI_Table_de
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: de
+  m_SharedData: {fileID: 11400000, guid: 3d1a26612b7a6004fa0d0c2be10c1d75, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 138884341760
+    m_Localized: Hallo!
+    m_Metadata:
+      m_Items: []
+  - m_Id: 557165502464
+    m_Localized: "Hauptmen\xFC"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 1581305487360
+    m_Localized: Spitzname
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8310198034432
+    m_Localized: Spitzname...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10886196944896
+    m_Localized: Bevorzugte Hand
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11684695957504
+    m_Localized: Online
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11883854094336
+    m_Localized: Beitrittscode...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 11942842785792
+    m_Localized: "Code einf\xFCgen"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12023344062464
+    m_Localized: Server erstellen
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12259177193472
+    m_Localized: Server beitreten
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12338793472000
+    m_Localized: Lokaler Test
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12374658965504
+    m_Localized: Adresse...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12447669215232
+    m_Localized: Port...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12501008179200
+    m_Localized: Lokalen Host starten
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12544071098368
+    m_Localized: Als lokaler Client beitreten
+    m_Metadata:
+      m_Items: []
+  - m_Id: 12708089356288
+    m_Localized: Sprache
+    m_Metadata:
+      m_Items: []
+  - m_Id: 8599298826240
+    m_Localized: Spielerfarbe
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15081692127232
+    m_Localized: Blau
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15553693933568
+    m_Localized: Rot
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15644521586688
+    m_Localized: "Gr\xFCn"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15674221453312
+    m_Localized: Gelb
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15734749454336
+    m_Localized: Violett
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15762331197440
+    m_Localized: Orange
+    m_Metadata:
+      m_Items: []
+  - m_Id: 15814546087936
+    m_Localized: "T\xFCrkis"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16011552546816
+    m_Localized: Rosa
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16372673732608
+    m_Localized: Links
+    m_Metadata:
+      m_Items: []
+  - m_Id: 16334149050368
+    m_Localized: Rechts
+    m_Metadata:
+      m_Items: []
+  - m_Id: 18022796812288
+    m_Localized: Laden...
+    m_Metadata:
+      m_Items: []
+  - m_Id: 18466109579264
+    m_Localized: Beitrittscode kopieren
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

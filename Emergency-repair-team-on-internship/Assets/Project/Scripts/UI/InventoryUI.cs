@@ -1,5 +1,7 @@
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
 public class InventoryUI : MonoBehaviour
@@ -162,9 +164,22 @@ public class InventoryUI : MonoBehaviour
 
         if (slot.ItemNameTxt != null)
         {
-            slot.ItemNameTxt.text = string.IsNullOrEmpty(itemName)
-                ? (slotIndex + 1).ToString()
-                : itemName;
+            string displayName;
+
+            if (string.IsNullOrEmpty(itemName))
+            {
+                displayName = (slotIndex + 1).ToString();
+            }
+            else if (PickableItem.LocalizationKeys.TryGetValue(itemName, out string key))
+            {
+                displayName = LocalizationSettings.StringDatabase.GetLocalizedString("Items_Table", key);
+            }
+            else
+            {
+                displayName = itemName;
+            }
+
+            slot.ItemNameTxt.text = displayName;
         }
 
         RefreshSlotColor(slotIndex);
