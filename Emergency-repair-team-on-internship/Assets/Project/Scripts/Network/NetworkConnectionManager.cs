@@ -30,6 +30,9 @@ public class NetworkConnectionManager : MonoBehaviour
     [SerializeField] private int maxPlayers = 4;
     [SerializeField] private string relayConnectionType = "dtls";
 
+    [Header("Connection Screen")]
+    [SerializeField] private ConnectionScreenManager connectionScreenPrefab;
+
     [Header("Timeout")]
     [SerializeField] private float clientConnectTimeout = 45f;
 
@@ -49,6 +52,10 @@ public class NetworkConnectionManager : MonoBehaviour
     public string CurrentJoinCode => currentJoinCode;
     public string RelayConnectionType => relayConnectionType;
 
+    public int MaxPlayers { get; set; }
+    public static bool IsLobbyLocked { get; set; }
+    public static int FixedPlayerCount { get; set; }
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -59,6 +66,8 @@ public class NetworkConnectionManager : MonoBehaviour
 
         Instance = this;
         DontDestroyOnLoad(gameObject);
+
+        MaxPlayers = maxPlayers;
 
         FindTransportIfNeeded();
     }
@@ -113,6 +122,8 @@ public class NetworkConnectionManager : MonoBehaviour
         if (isBusy)
             return;
 
+        ShowConnectionScreen(playerColor);
+
         ApplyPlayerSettings(profileId, playerName, playerColor);
         ApplyLocalConnectionData();
 
@@ -124,6 +135,7 @@ public class NetworkConnectionManager : MonoBehaviour
         if (!started)
         {
             SetStatus("Local Host failed");
+            DismissConnectionScreen();
             return;
         }
 
@@ -139,6 +151,8 @@ public class NetworkConnectionManager : MonoBehaviour
     {
         if (isBusy)
             return;
+
+        ShowConnectionScreen(playerColor);
 
         ApplyPlayerSettings(profileId, playerName, playerColor);
         ApplyLocalConnectionData();
@@ -161,6 +175,7 @@ public class NetworkConnectionManager : MonoBehaviour
         else
         {
             SetStatus("Local Client failed");
+            DismissConnectionScreen();
         }
     }
 
@@ -185,9 +200,11 @@ public class NetworkConnectionManager : MonoBehaviour
 
             relayConnectionType = NormalizeRelayConnectionType(relayConnectionType);
 
+            ShowConnectionScreen(playerColor);
+
             await EnsureUnityServicesAsync();
 
-            int maxConnections = Mathf.Max(1, maxPlayers - 1);
+            int maxConnections = Mathf.Max(1, MaxPlayers - 1);
 
             Debug.Log($"🌐 Creating Relay allocation. MaxConnections={maxConnections}, Type={relayConnectionType}");
 
@@ -219,6 +236,7 @@ public class NetworkConnectionManager : MonoBehaviour
             if (!started)
             {
                 SetStatus("Online Host failed");
+                DismissConnectionScreen();
                 return;
             }
 
@@ -234,6 +252,7 @@ public class NetworkConnectionManager : MonoBehaviour
             string errorMessage = GetShortExceptionMessage(exception);
 
             SetStatus($"Host error: {errorMessage}");
+            DismissConnectionScreen();
 
             Debug.LogError($"❌ Online Host error: {exception}");
         }
@@ -272,6 +291,8 @@ public class NetworkConnectionManager : MonoBehaviour
                 return;
             }
 
+            ShowConnectionScreen(playerColor);
+
             await EnsureUnityServicesAsync();
 
             Debug.Log($"🌐 Joining Relay allocation. Code={code}, Type={relayConnectionType}");
@@ -308,6 +329,7 @@ public class NetworkConnectionManager : MonoBehaviour
             else
             {
                 SetStatus("Online Client failed");
+                DismissConnectionScreen();
             }
 
             Debug.Log(started
@@ -319,6 +341,7 @@ public class NetworkConnectionManager : MonoBehaviour
             string errorMessage = GetShortExceptionMessage(exception);
 
             SetStatus($"Join error: {errorMessage}");
+            DismissConnectionScreen();
 
             Debug.LogError($"❌ Join Online error: {exception}");
         }
@@ -360,6 +383,23 @@ public class NetworkConnectionManager : MonoBehaviour
             return;
 
         NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(GetConnectionPayloadId());
+    }
+
+    private void ShowConnectionScreen(Color32 playerColor)
+    {
+        if (connectionScreenPrefab == null)
+            return;
+
+        var screen = Instantiate(connectionScreenPrefab);
+        DontDestroyOnLoad(screen.gameObject);
+        screen.Show(playerColor);
+    }
+
+    private static void DismissConnectionScreen()
+    {
+        var screen = FindObjectOfType<ConnectionScreenManager>();
+        if (screen != null)
+            screen.Dismiss();
     }
 
     private void LoadLobbySceneAsServer()
@@ -481,7 +521,15 @@ public class NetworkConnectionManager : MonoBehaviour
 
         clientProfiles[request.ClientNetworkId] = profileId;
 
-        if (MissionManager.Instance != null && MissionManager.Instance.IsMissionActive)
+        if (NetworkManager.Singleton.ConnectedClientsIds.Count >= MaxPlayers)
+        {
+            response.Approved = false;
+            response.Reason = "Lobby is full.";
+            response.CreatePlayerObject = false;
+            return;
+        }
+
+        if (IsLobbyLocked || (MissionManager.Instance != null && MissionManager.Instance.IsMissionActive))
         {
             if (!PreMissionProfiles.Contains(profileId))
             {
@@ -546,6 +594,7 @@ public class NetworkConnectionManager : MonoBehaviour
         {
             waitingForClientConnection = false;
             clientConnectionTimer = 0f;
+            DismissConnectionScreen();
 
             SetStatus(string.IsNullOrEmpty(reason)
                 ? $"Disconnected. Local ClientId: {clientId}"
@@ -561,6 +610,7 @@ public class NetworkConnectionManager : MonoBehaviour
     {
         waitingForClientConnection = false;
         clientConnectionTimer = 0f;
+        DismissConnectionScreen();
 
         SetStatus("Transport failure");
 
@@ -595,6 +645,7 @@ public class NetworkConnectionManager : MonoBehaviour
         clientConnectionTimer = 0f;
 
         SetStatus("Connection timed out");
+        DismissConnectionScreen();
 
         Debug.LogError("❌ Client connection timed out. StartClient was called, but connection was not established.");
 

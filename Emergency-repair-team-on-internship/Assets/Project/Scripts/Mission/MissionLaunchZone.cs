@@ -248,9 +248,6 @@ public class MissionLaunchZone : NetworkBehaviour
 
             if (!playersInZone.Contains(kvp.Key) || !IsServerPlayerInZone(kvp.Key))
                 return false;
-
-            var role = playerObj.GetComponent<NetworkPlayerRole>();
-            if (role == null || role.CurrentRole == PlayerRole.None) return false;
         }
 
         return true;
