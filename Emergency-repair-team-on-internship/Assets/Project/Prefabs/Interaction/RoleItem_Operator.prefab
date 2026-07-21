@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2545144953254883858}
   - component: {fileID: 562342966555929251}
   - component: {fileID: 7583955024648111102}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube (2)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -119,7 +119,7 @@ GameObject:
   - component: {fileID: 3050610532450000086}
   - component: {fileID: 8984430081163002199}
   - component: {fileID: 3228741671623814098}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -203,7 +203,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 236020772897002932}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -236,7 +236,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1065274624932939888}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PickupPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -272,7 +272,7 @@ GameObject:
   - component: {fileID: 2684888861926573332}
   - component: {fileID: 5059774965598686567}
   - component: {fileID: 5458324297100066945}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: RoleItem_Operator
   m_TagString: Untagged
   m_Icon: {fileID: 0}

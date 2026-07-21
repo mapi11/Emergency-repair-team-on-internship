@@ -352,6 +352,17 @@ public class Inventory : MonoBehaviour
         return FindFirstPrimaryRoleSlot() >= 0;
     }
 
+    public bool IsRoleItem(string itemName)
+    {
+        if (string.IsNullOrEmpty(itemName)) return false;
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] == itemName && slotRoleItems[i])
+                return true;
+        }
+        return false;
+    }
+
     public PlayerRole GetCurrentRole()
     {
         int roleSlot = FindFirstPrimaryRoleSlot();
@@ -366,12 +377,8 @@ public class Inventory : MonoBehaviour
     {
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slots[i] != null &&
-                slotRoleItems[i] &&
-                slotRoleItemCategories[i] == RoleItemCategory.PrimaryRole)
-            {
+            if (slots[i] != null && slotRoleItems[i])
                 SetSlotLocked(i, true);
-            }
         }
     }
 
@@ -379,11 +386,8 @@ public class Inventory : MonoBehaviour
     {
         for (int i = 0; i < slots.Length; i++)
         {
-            if (slotRoleItems[i] &&
-                slotRoleItemCategories[i] == RoleItemCategory.PrimaryRole)
-            {
+            if (slotRoleItems[i])
                 SetSlotLocked(i, false);
-            }
         }
     }
 

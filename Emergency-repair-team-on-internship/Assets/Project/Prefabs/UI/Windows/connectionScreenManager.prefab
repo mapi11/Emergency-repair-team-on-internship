@@ -440,7 +440,7 @@ MonoBehaviour:
   rightEyeCenter: {fileID: 2085463461324384672}
   leftPupil: {fileID: 4704814119793575073}
   rightPupil: {fileID: 6755065477581049379}
-  maxPupilOffset: 10
+  maxPupilOffset: 20
   eyeTrackingSpeed: 8
 --- !u!1 &4682754677687621218
 GameObject:

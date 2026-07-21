@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5266802674981327366}
   - component: {fileID: 8939234824424349078}
   - component: {fileID: 6478682367764600626}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PickableItem_Capsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -169,7 +169,7 @@ GameObject:
   - component: {fileID: 8524239142953150040}
   - component: {fileID: 7536664673615663663}
   - component: {fileID: 7003497798200940412}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: 'PickableItem '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -277,7 +277,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2331515385763578659}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PickupPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}

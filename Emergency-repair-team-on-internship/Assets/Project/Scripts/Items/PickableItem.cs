@@ -27,6 +27,8 @@ public class PickableItem : Interactable
     public Sprite InventoryIcon => inventoryIcon;
     public GameObject HeldVisualPrefab => heldVisualPrefab;
 
+    public static readonly System.Collections.Generic.Dictionary<string, Sprite> RegisteredIcons = new();
+
     public void Setup(string name, Sprite icon)
     {
         itemName = name;
@@ -37,7 +39,16 @@ public class PickableItem : Interactable
     {
         if (roleItem == null)
             roleItem = GetComponent<RoleItem>();
+
+        if (!string.IsNullOrEmpty(itemName) && inventoryIcon != null && !RegisteredIcons.ContainsKey(itemName))
+            RegisteredIcons[itemName] = inventoryIcon;
     }
+
+    //private void Awake()
+    //{
+    //    if (roleItem == null)
+    //        roleItem = GetComponent<RoleItem>();
+    //}
 
     public override void OnNetworkSpawn()
     {
@@ -160,6 +171,14 @@ public class PickableItem : Interactable
             {
                 sync.ServerSetSlotWorldId(slot, NetworkObjectId);
                 sync.ServerTrackItem(itemName);
+
+                if (roleItem != null && roleItem.IsRoleItem)
+                    NetworkInventorySync.ServerTrackRoleItem(
+                        playerNetObj.OwnerClientId,
+                        itemName,
+                        roleItem.Role,
+                        roleItem.Category
+                    );
             }
         }
 

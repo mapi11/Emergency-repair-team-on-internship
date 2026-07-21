@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1283426739973697796}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PickupPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -45,7 +45,7 @@ GameObject:
   - component: {fileID: 4743954588069985903}
   - component: {fileID: 6478682367764600626}
   - component: {fileID: 7770408422532467907}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: RoleItem_Mechanic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -217,7 +217,7 @@ GameObject:
   - component: {fileID: 7352703735622497721}
   - component: {fileID: 2460986774050293491}
   - component: {fileID: 1614264864557658271}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cylinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -324,7 +324,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4387142060185167455}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}

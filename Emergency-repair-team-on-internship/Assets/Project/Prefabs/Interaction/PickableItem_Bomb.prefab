@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4300954647706875126}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PickupPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -42,7 +42,7 @@ GameObject:
   - component: {fileID: 2778877915314384554}
   - component: {fileID: 4314466770001759939}
   - component: {fileID: 4028768647972831060}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -129,7 +129,7 @@ GameObject:
   - component: {fileID: 2622118447343104172}
   - component: {fileID: 8810054613274930989}
   - component: {fileID: 380368848238878823}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Cylinder (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -239,7 +239,7 @@ GameObject:
   - component: {fileID: 2279383557163770410}
   - component: {fileID: 4314103364683402613}
   - component: {fileID: 2345829940590224495}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: 'PickableItem '
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -349,7 +349,7 @@ GameObject:
   - component: {fileID: 7807924328415222276}
   - component: {fileID: 2365857222358659037}
   - component: {fileID: 7573085131484325392}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PickableItem_Bomb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -385,7 +385,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 2717892979
+  GlobalObjectIdHash: 3759655474
   InScenePlacedSourceGlobalObjectIdHash: 116216421
   DeferredDespawnTick: 0
   Ownership: 1
@@ -518,7 +518,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2611668491028727634}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}

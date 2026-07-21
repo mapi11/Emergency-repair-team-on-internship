@@ -7,6 +7,7 @@ public class NetworkInventorySync : NetworkBehaviour
 {
     [Header("References")]
     [SerializeField] private Inventory inventory;
+    public Inventory Inventory => inventory;
     [SerializeField] private PlayerController playerController;
     [SerializeField] private Transform leftHoldPivot;
     [SerializeField] private Transform rightHoldPivot;
@@ -61,11 +62,29 @@ public class NetworkInventorySync : NetworkBehaviour
         NetworkVariableWritePermission.Server
     );
 
+    private readonly NetworkVariable<bool> networkHasPrimaryRole = new(
+        false,
+        NetworkVariableReadPermission.Everyone,
+        NetworkVariableWritePermission.Server
+    );
+
+    public bool NetworkHasPrimaryRole => networkHasPrimaryRole.Value;
+
     private GameObject currentHeldVisual;
     private readonly Dictionary<int, ulong> serverSlotWorldIds = new();
 
     private static readonly Dictionary<ulong, TrackedPlayer> allTrackedItems = new();
     private static bool disconnectHookRegistered;
+
+    [System.Serializable]
+    public struct SavedRoleItem
+    {
+        public string ItemName;
+        public PlayerRole Role;
+        public RoleItemCategory Category;
+    }
+
+    private static readonly Dictionary<ulong, List<SavedRoleItem>> allTrackedRoleItems = new();
 
     private class TrackedPlayer
     {
@@ -97,6 +116,39 @@ public class NetworkInventorySync : NetworkBehaviour
         }
     }
 
+    public static void ServerUntrackRoleItem(ulong clientId, string itemName)
+    {
+        if (allTrackedRoleItems.TryGetValue(clientId, out var list))
+            list.RemoveAll(r => r.ItemName == itemName);
+    }
+
+    public static void ServerTrackRoleItem(ulong clientId, string itemName, PlayerRole role, RoleItemCategory category)
+    {
+        if (string.IsNullOrEmpty(itemName) || role == PlayerRole.None || category == RoleItemCategory.None)
+            return;
+
+        if (!allTrackedRoleItems.TryGetValue(clientId, out var list))
+        {
+            list = new List<SavedRoleItem>();
+            allTrackedRoleItems[clientId] = list;
+        }
+
+        if (!list.Exists(r => r.ItemName == itemName))
+            list.Add(new SavedRoleItem { ItemName = itemName, Role = role, Category = category });
+    }
+
+    public static List<SavedRoleItem> GetTrackedRoleItems(ulong clientId)
+    {
+        if (allTrackedRoleItems.TryGetValue(clientId, out var list))
+            return new List<SavedRoleItem>(list);
+        return new List<SavedRoleItem>();
+    }
+
+    public static void RemoveTrackedRoleItems(ulong clientId)
+    {
+        allTrackedRoleItems.Remove(clientId);
+    }
+
     private static void OnDisconnectStatic(ulong clientId)
     {
         if (!allTrackedItems.TryGetValue(clientId, out var entry))
@@ -105,16 +157,25 @@ public class NetworkInventorySync : NetworkBehaviour
         allTrackedItems.Remove(clientId);
 
         if (entry.Items.Count == 0)
+        {
+            RemoveTrackedRoleItems(clientId);
             return;
+        }
 
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening)
             return;
 
         var sync = entry.SyncInstance;
+        var inv = sync != null ? sync.Inventory : null;
+
+        allTrackedRoleItems.TryGetValue(clientId, out var roleItems);
 
         foreach (string itemName in entry.Items)
         {
             if (string.IsNullOrEmpty(itemName))
+                continue;
+
+            if (roleItems != null && roleItems.Exists(r => r.ItemName == itemName))
                 continue;
 
             int idx = sync != null ? sync.GetPrefabIndex(itemName) : -1;
@@ -140,6 +201,8 @@ public class NetworkInventorySync : NetworkBehaviour
             if (!netObj.IsSpawned)
                 netObj.Spawn(true);
         }
+
+        RemoveTrackedRoleItems(clientId);
     }
     private GameObject cachedWorldVisualPrefab;
 
@@ -152,7 +215,10 @@ public class NetworkInventorySync : NetworkBehaviour
             playerController = GetComponent<PlayerController>();
 
         if (inventory != null)
+        {
             inventory.OnActiveSlotChanged += OnLocalActiveSlotChanged;
+            inventory.OnSlotRoleChanged += OnLocalSlotRoleChanged;
+        }
     }
 
     private void Update()
@@ -188,7 +254,10 @@ public class NetworkInventorySync : NetworkBehaviour
     private void OnDestroy()
     {
         if (inventory != null)
+        {
             inventory.OnActiveSlotChanged -= OnLocalActiveSlotChanged;
+            inventory.OnSlotRoleChanged -= OnLocalSlotRoleChanged;
+        }
     }
 
     public override void OnNetworkSpawn()
@@ -295,6 +364,7 @@ public class NetworkInventorySync : NetworkBehaviour
             return;
 
         ServerUntrackItem(OwnerClientId, itemName);
+        ServerUntrackRoleItem(OwnerClientId, itemName);
     }
 
     private void OnActiveWorldIdChanged(ulong oldId, ulong newId)
@@ -604,6 +674,7 @@ public class NetworkInventorySync : NetworkBehaviour
             inventory.RemoveItem(slot);
 
         ServerUntrackItem(itemName.ToString());
+        ServerUntrackRoleItem(OwnerClientId, itemName.ToString());
 
         Vector3 position = ComputeThrowPosition(handIndex);
         Quaternion rotation = Quaternion.LookRotation(velocity);
@@ -819,5 +890,50 @@ public class NetworkInventorySync : NetworkBehaviour
     {
         if (inventory != null)
             inventory.SetMaxRoleItems(newValue);
+    }
+
+    private void OnLocalSlotRoleChanged(int slot, bool isRole, PlayerRole role)
+    {
+        if (!IsOwner) return;
+
+        bool has = inventory != null && inventory.HasPrimaryRoleItem();
+        UpdatePrimaryRoleServerRpc(has);
+    }
+
+    [ServerRpc]
+    private void UpdatePrimaryRoleServerRpc(bool has)
+    {
+        networkHasPrimaryRole.Value = has;
+    }
+
+    [ClientRpc]
+    public void RestoreRoleItemsClientRpc(string itemName, byte role, byte category, ClientRpcParams clientRpcParams = default)
+    {
+        if (inventory == null || string.IsNullOrEmpty(itemName)) return;
+
+        int prefabIdx = GetPrefabIndex(itemName);
+        Sprite icon = null;
+        if (prefabIdx >= 0 && prefabIdx < items.Length && items[prefabIdx].WorldDropPrefab != null)
+        {
+            var pickable = items[prefabIdx].WorldDropPrefab.GetComponent<PickableItem>();
+            if (pickable != null)
+                icon = pickable.InventoryIcon;
+        }
+
+        if (icon == null)
+            PickableItem.RegisteredIcons.TryGetValue(itemName, out icon);
+
+        int slot = inventory.AddItem(itemName, icon, null, null, true, (PlayerRole)role, (RoleItemCategory)category);
+
+        if (slot >= 0)
+        {
+            var roleComp = GetComponent<NetworkPlayerRole>();
+            if (roleComp != null)
+                roleComp.RequestAddRole((PlayerRole)role);
+        }
+
+        var startLobby = FindObjectOfType<StartLobbyController>();
+        if (startLobby != null && startLobby.NetworkMissionActive.Value)
+            inventory.LockRoleSlots();
     }
 }

@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 5525742784579736940}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Visual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,7 +44,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3208142767857180688}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: PickupPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -77,7 +77,7 @@ GameObject:
   - component: {fileID: 7218448483219291810}
   - component: {fileID: 3352342348351533748}
   - component: {fileID: 4249507890253277754}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -163,7 +163,7 @@ GameObject:
   - component: {fileID: 2870695657394842637}
   - component: {fileID: 4746919970769608083}
   - component: {fileID: 4267995836267106871}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -249,7 +249,7 @@ GameObject:
   - component: {fileID: 6883950902795700403}
   - component: {fileID: 3012917758725264561}
   - component: {fileID: 1188237180087238215}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cylinder
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -336,7 +336,7 @@ GameObject:
   - component: {fileID: 1853885322529239229}
   - component: {fileID: 1885053004880296345}
   - component: {fileID: 4164220513831483490}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -353,7 +353,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.25, y: 0.4, z: 0.05}
+  m_LocalScale: {x: 0.24, y: 0.4, z: 0.05}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5525742784579736940}
@@ -446,7 +446,7 @@ GameObject:
   - component: {fileID: 716667636804231170}
   - component: {fileID: 9101804508377918506}
   - component: {fileID: 138049293182238486}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: RoleItem_Electrician
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -17,19 +17,25 @@ public class NetworkConnectionManager : MonoBehaviour
 
     private static readonly Dictionary<ulong, string> clientProfiles = new Dictionary<ulong, string>();
     public static readonly HashSet<string> PreMissionProfiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    private static readonly string localSessionId = LoadOrCreateSessionId();
+    private static string localSessionId;
 
-    private static string LoadOrCreateSessionId()
+    private static readonly Dictionary<string, System.Collections.Generic.List<NetworkInventorySync.SavedRoleItem>> pendingRoleItems =
+        new Dictionary<string, System.Collections.Generic.List<NetworkInventorySync.SavedRoleItem>>();
+
+    private static string GetOrCreateSessionId()
     {
+        if (!string.IsNullOrEmpty(localSessionId))
+            return localSessionId;
+
         const string key = "PersistentSessionId";
-        string id = PlayerPrefs.GetString(key, "");
-        if (string.IsNullOrEmpty(id))
+        localSessionId = PlayerPrefs.GetString(key, "");
+        if (string.IsNullOrEmpty(localSessionId))
         {
-            id = Guid.NewGuid().ToString("N");
-            PlayerPrefs.SetString(key, id);
+            localSessionId = Guid.NewGuid().ToString("N");
+            PlayerPrefs.SetString(key, localSessionId);
             PlayerPrefs.Save();
         }
-        return id;
+        return localSessionId;
     }
 
     [Header("Scenes")]
@@ -385,7 +391,7 @@ public class NetworkConnectionManager : MonoBehaviour
 
     public static string GetConnectionPayloadId()
     {
-        return localSessionId;
+        return GetOrCreateSessionId();
     }
 
     private static void SetConnectionPayload()
@@ -394,6 +400,92 @@ public class NetworkConnectionManager : MonoBehaviour
             return;
 
         NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(GetConnectionPayloadId());
+    }
+
+    private void SavePlayerRoleItems(ulong clientId)
+    {
+        if (!clientProfiles.TryGetValue(clientId, out string profileId))
+            return;
+
+        var tracked = NetworkInventorySync.GetTrackedRoleItems(clientId);
+        if (tracked.Count > 0)
+        {
+            pendingRoleItems[profileId] = tracked;
+            return;
+        }
+
+        if (NetworkManager.Singleton == null) return;
+
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+            return;
+
+        var player = client.PlayerObject;
+        if (player == null) return;
+
+        var inv = player.GetComponent<Inventory>();
+        if (inv == null) return;
+
+        var items = new System.Collections.Generic.List<NetworkInventorySync.SavedRoleItem>();
+        for (int i = 0; i < inv.MaxSlots; i++)
+        {
+            string item = inv.GetItemAtSlot(i);
+            if (string.IsNullOrEmpty(item)) continue;
+            if (!inv.IsRoleItemSlot(i)) continue;
+
+            items.Add(new NetworkInventorySync.SavedRoleItem
+            {
+                ItemName = item,
+                Role = inv.GetSlotRole(i),
+                Category = inv.GetSlotRoleItemCategory(i)
+            });
+        }
+
+        if (items.Count > 0)
+            pendingRoleItems[profileId] = items;
+    }
+
+    public static void RestorePlayerRoleItems(ulong clientId)
+    {
+        if (!clientProfiles.TryGetValue(clientId, out string profileId))
+            return;
+
+        if (!pendingRoleItems.TryGetValue(profileId, out var items) || items.Count == 0)
+            return;
+
+        if (NetworkManager.Singleton == null) return;
+
+        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
+            return;
+
+        var player = client.PlayerObject;
+        if (player == null) return;
+
+        var sync = player.GetComponent<NetworkInventorySync>();
+        if (sync == null) return;
+
+        var serverInventory = player.GetComponent<Inventory>();
+
+        var rpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+        foreach (var savedItem in items)
+        {
+            if (serverInventory != null)
+                serverInventory.AddItem(savedItem.ItemName, null, null, null, true, savedItem.Role, savedItem.Category);
+
+            sync.RestoreRoleItemsClientRpc(
+                savedItem.ItemName,
+                (byte)savedItem.Role,
+                (byte)savedItem.Category,
+                rpcParams
+            );
+        }
+
+        pendingRoleItems.Remove(profileId);
     }
 
     private void ShowConnectionScreen(Color32 playerColor)
@@ -589,6 +681,8 @@ public class NetworkConnectionManager : MonoBehaviour
 
     private void OnClientDisconnected(ulong clientId)
     {
+        SavePlayerRoleItems(clientId);
+
         clientProfiles.Remove(clientId);
 
         string reason = NetworkManager.Singleton != null

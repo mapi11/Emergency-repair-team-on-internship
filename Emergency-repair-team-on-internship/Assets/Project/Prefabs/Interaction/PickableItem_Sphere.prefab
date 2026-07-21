@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1283426739973697796}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PickupPivot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,7 +44,7 @@ GameObject:
   - component: {fileID: 5266802674981327366}
   - component: {fileID: 8118174375387074557}
   - component: {fileID: 6478682367764600626}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: PickableItem_Sphere
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -200,7 +200,7 @@ GameObject:
   - component: {fileID: 3213264056111306398}
   - component: {fileID: 6460426706047388243}
   - component: {fileID: 3285078798489300361}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: 'PickableItem '
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -219,7 +219,7 @@ public class PreStartLobbyController : NetworkBehaviour
     private void OnCountdownChanged(int oldValue, int newValue)
     {
         if (countdownText != null)
-            countdownText.text = newValue > 0 ? newValue.ToString() : "";
+            countdownText.text = newValue > 0 ? $"{newValue} sec." : "";
     }
 
     private void RefreshCounts()
@@ -351,6 +351,8 @@ public class PreStartLobbyController : NetworkBehaviour
             };
             SyncPlayerCountClientRpc(totalPlayerCount, rpcParams);
             ActivateInventoryClientRpc(totalPlayerCount, rpcParams);
+
+            NetworkConnectionManager.RestorePlayerRoleItems(clientId);
 
             var reconnected = NetworkManager.Singleton.ConnectedClients[clientId]?.PlayerObject;
             if (reconnected != null)

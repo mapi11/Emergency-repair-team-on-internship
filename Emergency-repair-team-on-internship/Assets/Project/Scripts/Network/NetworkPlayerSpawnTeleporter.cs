@@ -106,6 +106,14 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
 
     private Transform FindTargetSpawn()
     {
+        var startLobby = FindObjectOfType<StartLobbyController>();
+        if (startLobby != null && startLobby.IsMissionActive)
+        {
+            Transform spawn = startLobby.GetReconnectSpawn(OwnerClientId);
+            if (spawn != null)
+                return spawn;
+        }
+
         if (AreSpawnsDisabled())
         {
             var lobby = FindObjectOfType<PreStartLobbyController>();
@@ -167,7 +175,8 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
         if (spawnPoints == null || spawnPoints.Length == 0)
             return null;
 
-        var lobby = FindObjectOfType<PreStartLobbyController>();
+        var preLobby = FindObjectOfType<PreStartLobbyController>();
+        var startLobby = FindObjectOfType<StartLobbyController>();
 
         Array.Sort(spawnPoints, (a, b) => a.Index.CompareTo(b.Index));
 
@@ -177,7 +186,9 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
         {
             if (spawnPoints[i].Index == spawnIndex)
             {
-                if (lobby != null && lobby.IsReconnectSpawn(spawnPoints[i].transform))
+                if (preLobby != null && preLobby.IsReconnectSpawn(spawnPoints[i].transform))
+                    continue;
+                if (startLobby != null && startLobby.IsReconnectSpawn(spawnPoints[i].transform))
                     continue;
                 return spawnPoints[i];
             }
@@ -185,7 +196,9 @@ public class NetworkPlayerSpawnTeleporter : NetworkBehaviour
 
         for (int i = 0; i < spawnPoints.Length; i++)
         {
-            if (lobby != null && lobby.IsReconnectSpawn(spawnPoints[i].transform))
+            if (preLobby != null && preLobby.IsReconnectSpawn(spawnPoints[i].transform))
+                continue;
+            if (startLobby != null && startLobby.IsReconnectSpawn(spawnPoints[i].transform))
                 continue;
             return spawnPoints[i];
         }
