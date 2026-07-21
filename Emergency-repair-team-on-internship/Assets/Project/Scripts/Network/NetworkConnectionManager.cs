@@ -17,7 +17,20 @@ public class NetworkConnectionManager : MonoBehaviour
 
     private static readonly Dictionary<ulong, string> clientProfiles = new Dictionary<ulong, string>();
     public static readonly HashSet<string> PreMissionProfiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-    private static readonly string localSessionId = Guid.NewGuid().ToString("N");
+    private static readonly string localSessionId = LoadOrCreateSessionId();
+
+    private static string LoadOrCreateSessionId()
+    {
+        const string key = "PersistentSessionId";
+        string id = PlayerPrefs.GetString(key, "");
+        if (string.IsNullOrEmpty(id))
+        {
+            id = Guid.NewGuid().ToString("N");
+            PlayerPrefs.SetString(key, id);
+            PlayerPrefs.Save();
+        }
+        return id;
+    }
 
     [Header("Scenes")]
     [SerializeField] private string lobbySceneName = "Lobby";
