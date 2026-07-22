@@ -38,6 +38,18 @@ MonoBehaviour:
     m_Localized: "Zerst\xF6rer"
     m_Metadata:
       m_Items: []
+  - m_Id: 258407213228032
+    m_Localized: Kapsel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 343640205877248
+    m_Localized: "W\xFCrfel"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 343684011188224
+    m_Localized: Kugel
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

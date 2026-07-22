@@ -38,6 +38,18 @@ MonoBehaviour:
     m_Localized: Destroyer
     m_Metadata:
       m_Items: []
+  - m_Id: 258407213228032
+    m_Localized: Capsule
+    m_Metadata:
+      m_Items: []
+  - m_Id: 343640205877248
+    m_Localized: Cube
+    m_Metadata:
+      m_Items: []
+  - m_Id: 343684011188224
+    m_Localized: Sphere
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

@@ -25,6 +25,11 @@ MonoBehaviour:
     m_ReadOnly: 1
     m_SerializedLabels: []
     FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 3f10d4248479ae647aafc3b3fcfbf64b
+    m_Address: Assets/Project/Localization/PlayerUI_Table/PlayerUI_Table Shared Data.asset
+    m_ReadOnly: 1
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 1
   m_Settings: {fileID: 11400000, guid: a0bb4d06907523c43bb91a764969f294, type: 2}
   m_SchemaSet:

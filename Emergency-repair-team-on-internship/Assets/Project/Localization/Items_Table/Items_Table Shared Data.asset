@@ -35,6 +35,18 @@ MonoBehaviour:
     m_Key: Role_Destroyer
     m_Metadata:
       m_Items: []
+  - m_Id: 258407213228032
+    m_Key: Item_Capsule
+    m_Metadata:
+      m_Items: []
+  - m_Id: 343640205877248
+    m_Key: Item_Cube
+    m_Metadata:
+      m_Items: []
+  - m_Id: 343684011188224
+    m_Key: Item_Sphere
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

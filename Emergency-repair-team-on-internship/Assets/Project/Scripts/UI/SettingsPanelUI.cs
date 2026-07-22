@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Localization;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 using DG.Tweening;
 
@@ -17,10 +19,15 @@ public class SettingsPanelUI : MonoBehaviour
     [SerializeField] private TMP_Text sensitivityValueText;
 
     [Header("Graphics")]
-    [SerializeField] private TMP_Dropdown qualityDropdown;
+    [SerializeField] private Button graphicsButton;
+    [SerializeField] private GameObject graphicsPanelPrefab;
+    [SerializeField] private Transform graphicsContainer;
 
     [Header("Microphone")]
     [SerializeField] private TMP_Dropdown micDropdown;
+
+    [Header("Language")]
+    [SerializeField] private TMP_Dropdown languageDropdown;
 
     [Header("Buttons")]
     [SerializeField] private Button backButton;
@@ -35,15 +42,34 @@ public class SettingsPanelUI : MonoBehaviour
     private void Awake()
     {
         canvasGroup = GetComponent<CanvasGroup>();
+
+        if (canvasGroup != null)
+        {
+            canvasGroup.alpha = 0f;
+            canvasGroup.interactable = false;
+        }
+
+        transform.localScale = Vector3.one * 0.8f;
+
         playerController = GetLocalPlayerController();
+
+        LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
 
         InitVolume();
         InitSensitivity();
-        InitQuality();
         InitMicDropdown();
+        InitLanguageDropdown();
 
         if (backButton != null)
             backButton.onClick.AddListener(() => PauseMenu.Instance.CloseSettings());
+
+        if (graphicsButton != null)
+            graphicsButton.onClick.AddListener(OpenGraphicsPanel);
+    }
+
+    private void OnDestroy()
+    {
+        LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
     }
 
     private void Start()
@@ -53,15 +79,16 @@ public class SettingsPanelUI : MonoBehaviour
 
     public void AnimateIn()
     {
-        transform.localScale = Vector3.one * 0.8f;
-
-        if (canvasGroup != null)
-            canvasGroup.alpha = 0f;
-
         transform.DOScale(1f, animInDuration).SetEase(Ease.OutBack, 1.2f);
 
         if (canvasGroup != null)
-            canvasGroup.DOFade(1f, animInDuration * 0.6f);
+        {
+            canvasGroup.DOFade(1f, animInDuration * 0.6f).OnComplete(() =>
+            {
+                if (canvasGroup != null)
+                    canvasGroup.interactable = true;
+            });
+        }
     }
 
     public void AnimateOut(Action onComplete)
@@ -148,37 +175,6 @@ public class SettingsPanelUI : MonoBehaviour
             sensitivityValueText.text = (value * 100f).ToString("F0");
     }
 
-    private void InitQuality()
-    {
-        if (qualityDropdown == null)
-            return;
-
-        qualityDropdown.ClearOptions();
-
-        string[] names = QualitySettings.names;
-        var options = new List<TMP_Dropdown.OptionData>();
-
-        for (int i = 0; i < names.Length; i++)
-            options.Add(new TMP_Dropdown.OptionData(names[i]));
-
-        qualityDropdown.AddOptions(options);
-
-        int savedQuality = PlayerPrefs.GetInt("QualityLevel", -1);
-        int qualityIndex = savedQuality >= 0 ? savedQuality : QualitySettings.GetQualityLevel();
-        qualityIndex = Mathf.Clamp(qualityIndex, 0, names.Length - 1);
-
-        qualityDropdown.SetValueWithoutNotify(qualityIndex);
-        QualitySettings.SetQualityLevel(qualityIndex, true);
-        qualityDropdown.onValueChanged.AddListener(OnQualityChanged);
-    }
-
-    private void OnQualityChanged(int index)
-    {
-        QualitySettings.SetQualityLevel(index, true);
-        PlayerPrefs.SetInt("QualityLevel", index);
-        PlayerPrefs.Save();
-    }
-
     private void InitMicDropdown()
     {
         if (micDropdown == null)
@@ -231,6 +227,51 @@ public class SettingsPanelUI : MonoBehaviour
             if (ProximityVoiceManager.Instance != null)
                 ProximityVoiceManager.Instance.RestartMicrophone();
         }
+    }
+
+    private void OnLocaleChanged(Locale _)
+    {
+        InitLanguageDropdown();
+    }
+
+    private void InitLanguageDropdown()
+    {
+        if (languageDropdown == null) return;
+
+        languageDropdown.onValueChanged.RemoveAllListeners();
+        languageDropdown.ClearOptions();
+
+        var locales = LocalizationSettings.AvailableLocales.Locales;
+        var options = new List<string>();
+
+        for (int i = 0; i < locales.Count; i++)
+            options.Add(locales[i].Identifier.CultureInfo?.NativeName ?? locales[i].LocaleName);
+
+        languageDropdown.AddOptions(options);
+
+        int selected = locales.IndexOf(LocalizationSettings.SelectedLocale);
+        languageDropdown.SetValueWithoutNotify(selected >= 0 ? selected : 0);
+        languageDropdown.onValueChanged.AddListener(OnLanguageChanged);
+    }
+
+    private void OnLanguageChanged(int index)
+    {
+        var locales = LocalizationSettings.AvailableLocales.Locales;
+
+        if (index >= 0 && index < locales.Count)
+        {
+            LocalizationSettings.SelectedLocale = locales[index];
+            PlayerPrefs.SetString("Locale", locales[index].Identifier.Code);
+            PlayerPrefs.Save();
+        }
+    }
+
+    private void OpenGraphicsPanel()
+    {
+        if (graphicsPanelPrefab == null) return;
+
+        Transform parent = graphicsContainer != null ? graphicsContainer : transform;
+        Instantiate(graphicsPanelPrefab, parent);
     }
 
     private static PlayerController GetLocalPlayerController()

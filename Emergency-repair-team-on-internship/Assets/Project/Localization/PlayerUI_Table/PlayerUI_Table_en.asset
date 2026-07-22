@@ -1,0 +1,123 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: PlayerUI_Table_en
+  m_EditorClassIdentifier: 
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 3f10d4248479ae647aafc3b3fcfbf64b, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 4666613760
+    m_Localized: Resume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 148933894144
+    m_Localized: Settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 233667223552
+    m_Localized: Exit
+    m_Metadata:
+      m_Items: []
+  - m_Id: 711570415616
+    m_Localized: Voice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 45369298182144
+    m_Localized: Volume
+    m_Metadata:
+      m_Items: []
+  - m_Id: 47346103017472
+    m_Localized: Sensitivity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 47412792451072
+    m_Localized: Microphone
+    m_Metadata:
+      m_Items: []
+  - m_Id: 47435924037632
+    m_Localized: Graphic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 47937957060608
+    m_Localized: Back
+    m_Metadata:
+      m_Items: []
+  - m_Id: 53919592407040
+    m_Localized: Preset
+    m_Metadata:
+      m_Items: []
+  - m_Id: 53953302028288
+    m_Localized: Textures
+    m_Metadata:
+      m_Items: []
+  - m_Id: 53993680592896
+    m_Localized: Shadow
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55000166752256
+    m_Localized: Shadow distance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55053212114944
+    m_Localized: Shadow resolution
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55085831217152
+    m_Localized: Draw distance
+    m_Metadata:
+      m_Items: []
+  - m_Id: 55110397255680
+    m_Localized: Max FPS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 67121034223616
+    m_Localized: Low
+    m_Metadata:
+      m_Items: []
+  - m_Id: 69227665350656
+    m_Localized: Medium
+    m_Metadata:
+      m_Items: []
+  - m_Id: 69260808740864
+    m_Localized: High
+    m_Metadata:
+      m_Items: []
+  - m_Id: 69288684085248
+    m_Localized: Very High
+    m_Metadata:
+      m_Items: []
+  - m_Id: 69370011639808
+    m_Localized: Ultra
+    m_Metadata:
+      m_Items: []
+  - m_Id: 70378985021440
+    m_Localized: Unlimited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 75314011496448
+    m_Localized: Disable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 75357212827648
+    m_Localized: Hard Only
+    m_Metadata:
+      m_Items: []
+  - m_Id: 75417313009664
+    m_Localized: All
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []
