@@ -533,6 +533,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxSlots: 3
+  maxRoleItems: 3
 --- !u!1 &1880691133085265111
 GameObject:
   m_ObjectHideFlags: 0
@@ -1397,6 +1398,7 @@ MonoBehaviour:
   activeSlotColor: {r: 1, g: 1, b: 1, a: 1}
   inactiveSlotColor: {r: 0.3, g: 0.3, b: 0.3, a: 0.8}
   emptySlotColor: {r: 0.15, g: 0.15, b: 0.15, a: 0.5}
+  lockedSlotColor: {r: 0.65, g: 0.65, b: 0.65, a: 1}
 --- !u!114 &908744296311666315
 MonoBehaviour:
   m_ObjectHideFlags: 0

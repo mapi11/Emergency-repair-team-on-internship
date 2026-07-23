@@ -39,7 +39,7 @@ public class NetworkConnectionManager : MonoBehaviour
     }
 
     [Header("Scenes")]
-    [SerializeField] private string lobbySceneName = "Lobby";
+    [SerializeField] private string lobbySceneName = "LobbyScene";
 
     [Header("Local Connection")]
     [SerializeField] private string address = "127.0.0.1";
@@ -406,6 +406,15 @@ public class NetworkConnectionManager : MonoBehaviour
     {
         if (!clientProfiles.TryGetValue(clientId, out string profileId))
             return;
+
+        var startLobby = FindObjectOfType<StartLobbyController>();
+        bool missionActive = startLobby != null && startLobby.IsMissionActive;
+
+        if (!missionActive)
+        {
+            NetworkInventorySync.RemoveTrackedRoleItems(clientId);
+            return;
+        }
 
         var tracked = NetworkInventorySync.GetTrackedRoleItems(clientId);
         if (tracked.Count > 0)

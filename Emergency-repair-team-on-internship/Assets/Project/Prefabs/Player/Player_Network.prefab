@@ -1236,6 +1236,26 @@ PrefabInstance:
       propertyPath: m_PixelsPerUnitMultiplier
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 7945239267575262212, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7945239267575262212, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7945239267575262212, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7945239267575262212, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 60.015
+      objectReference: {fileID: 0}
+    - target: {fileID: 7945239267575262212, guid: 757e198222a17af43a243b993516a699, type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -50
+      objectReference: {fileID: 0}
     - target: {fileID: 8324031091069844331, guid: 757e198222a17af43a243b993516a699, type: 3}
       propertyPath: m_Name
       value: Sphere_Eye_L
@@ -1303,9 +1323,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7994246642556777233}
-    - targetCorrespondingSourceObject: {fileID: 1319947104086524441, guid: 757e198222a17af43a243b993516a699, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3794218578483020961}
   m_SourcePrefab: {fileID: 100100000, guid: 757e198222a17af43a243b993516a699, type: 3}
 --- !u!4 &358198167749589956 stripped
 Transform:
@@ -1395,7 +1412,7 @@ MonoBehaviour:
   rightEjectPoint: {fileID: 8668837333863770794}
   minThrowForce: 3
   maxThrowForce: 8
-  throwBlockCheckRadius: 0.15
+  throwBlockCheckRadius: 0.13
   throwBlockMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -1738,21 +1755,6 @@ MonoBehaviour:
   queuedSamplesDebug: 0
   distanceToListenerDebug: 0
   hasListenerDebug: 0
---- !u!114 &3794218578483020961
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1156839613533151179}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 527009067d5989c49af4c394d5170249, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ShowTopMostFoldoutHeaderGroup: 1
-  startKey: 27
-  returnKey: 28
 --- !u!4 &1176713597209492168 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1299298741292328730, guid: 757e198222a17af43a243b993516a699, type: 3}
