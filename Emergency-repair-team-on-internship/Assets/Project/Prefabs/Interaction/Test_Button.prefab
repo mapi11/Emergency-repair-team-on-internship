@@ -184,7 +184,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8659958190732309167}
   - component: {fileID: 5449459583614616184}
-  - component: {fileID: 7045481306108286326}
+  - component: {fileID: 7128991209684910184}
   m_Layer: 0
   m_Name: Test_Button
   m_TagString: Untagged
@@ -207,7 +207,6 @@ Transform:
   m_Children:
   - {fileID: 4175482130623901261}
   - {fileID: 2733010298061496731}
-  - {fileID: 5724694676625117358}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &5449459583614616184
@@ -236,7 +235,7 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &7045481306108286326
+--- !u!114 &7128991209684910184
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -245,21 +244,22 @@ MonoBehaviour:
   m_GameObject: {fileID: 2409223676509409269}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b75cd94ce05a2243a0e84d36f9c57c3, type: 3}
+  m_Script: {fileID: 11500000, guid: 3b00c654b1f76494b93048855da46fce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   ShowTopMostFoldoutHeaderGroup: 1
   handTarget: {fileID: 5724694676625117358}
   canInteract: 1
+  cancelOnCanInteractFail: 1
   lockWhileInteracting: 1
   isBusyDebug: 0
   currentUserClientIdDebug: 18446744073709551615
-  buttonVisual: {fileID: 2733010298061496731}
+  buttonVisual: {fileID: 2260458503546651905}
   buttonRenderer: {fileID: 4438195086635055252}
   normalLocalPosition: {x: 0, y: 0, z: 0}
   pressedLocalPosition: {x: 0, y: -0.06, z: 0}
   resetOnRelease: 1
-  normalColor: {r: 1, g: 0.79607844, b: 0, a: 1}
+  normalColor: {r: 1, g: 1, b: 1, a: 1}
   pressedColor: {r: 0, g: 1, b: 0, a: 1}
   onPressed:
     m_PersistentCalls:
@@ -292,12 +292,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6884471234789449185}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.16, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.5714285, z: 0}
+  m_LocalScale: {x: 3.5714288, y: 3.5714288, z: 3.5714288}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 8659958190732309167}
+  m_Father: {fileID: 2260458503546651905}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8911752477140417829
 GameObject:
@@ -330,7 +330,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 0.28, y: 0.28, z: 0.28}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 5724694676625117358}
   m_Father: {fileID: 2733010298061496731}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!33 &5324927848295198182

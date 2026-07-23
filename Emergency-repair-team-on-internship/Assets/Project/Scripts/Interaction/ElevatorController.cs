@@ -18,8 +18,8 @@ public class ElevatorController : NetworkBehaviour
     public class ElevatorFloor
     {
         public Transform position;
-        public NetworkButton callButton;
-        public NetworkButton insideButton;
+        public ButtonPress callButton;
+        public ButtonPress insideButton;
     }
 
     [Header("Floors")]

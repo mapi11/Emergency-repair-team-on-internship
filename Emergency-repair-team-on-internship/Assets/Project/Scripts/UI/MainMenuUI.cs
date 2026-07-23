@@ -4,7 +4,7 @@ using UnityEngine.UI;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 
-public class MainMenuUI : MonoBehaviour
+    public class MainMenuUI : MonoBehaviour
 {
     [Header("Profile")]
     [SerializeField] private TMP_InputField profileInput;
@@ -45,13 +45,11 @@ public class MainMenuUI : MonoBehaviour
 
     private NetworkConnectionManager connectionManager;
 
-    private readonly LocalizedString statusStr = new("UI_Table", "Status");
     private readonly LocalizedString noMicrophoneStr = new("UI_Table", "MicrophoneNotFound");
     private readonly LocalizedString microphoneLabelStr = new("UI_Table", "MicrophoneLabel");
     private readonly LocalizedString colorLabelStr = new("UI_Table", "ColorLabel");
     private readonly LocalizedString noJoinCodeStr = new("UI_Table", "NoJoinCode");
     private readonly LocalizedString copiedCodeStr = new("UI_Table", "CopiedCode");
-    private string pendingStatusValue;
     private string pendingMicrophoneName;
     private LocalizedString currentStatusSource;
 
@@ -552,33 +550,14 @@ public class MainMenuUI : MonoBehaviour
 
     private void OnStatusChanged(string newStatus)
     {
-        pendingStatusValue = newStatus;
-        ApplyStatusText();
+        SetStatus(newStatus);
     }
-
-    private void ApplyStatusText()
-    {
-        if (statusText == null) return;
-
-        if (currentStatusSource != null && currentStatusSource != statusStr)
-        {
-            currentStatusSource.StringChanged -= OnStatusTextChanged;
-            currentStatusSource = null;
-        }
-
-        statusStr.Arguments = new object[] { pendingStatusValue ?? "" };
-        statusStr.StringChanged -= OnStatusTextChanged;
-        statusStr.StringChanged += OnStatusTextChanged;
-        statusStr.RefreshString();
-        currentStatusSource = statusStr;
-    }
-
-    private void OnStatusTextChanged(string s) => statusText.text = s;
 
     private void SetStatus(string value)
     {
-        pendingStatusValue = value;
-        ApplyStatusText();
+        if (statusText == null) return;
+
+        statusText.text = value ?? "";
     }
 
     private void SetStatusFromLocalized(LocalizedString locStr)
@@ -596,6 +575,8 @@ public class MainMenuUI : MonoBehaviour
         locStr.RefreshString();
         currentStatusSource = locStr;
     }
+
+    private void OnStatusTextChanged(string s) => statusText.text = s;
 
     private static bool ColorsMatch(Color32 a, Color32 b)
     {

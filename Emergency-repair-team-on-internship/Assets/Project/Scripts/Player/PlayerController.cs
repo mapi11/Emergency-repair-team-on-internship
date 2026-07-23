@@ -434,7 +434,7 @@ public class PlayerController : MonoBehaviour
 
         if (IsInteractPressed() && currentInteractable != null)
         {
-            if (!currentInteractable.CanInteract(this))
+            if (!currentInteractable.CanInteract(this) && currentInteractable.CancelOnCanInteractFail)
             {
                 StopInteraction();
                 return;
@@ -506,6 +506,19 @@ public class PlayerController : MonoBehaviour
         {
             hand.ClearTarget();
         }
+    }
+
+    public void ReleaseCurrentInteractable()
+    {
+        if (currentInteractable != null && handReachedInteractable)
+            currentInteractable.OnHandEnd(this);
+
+        currentInteractable = null;
+        handReachedInteractable = false;
+
+        Hand hand = InteractionHandRef;
+        if (hand != null)
+            hand.ClearTarget();
     }
 
     private void HandleInventoryInput()

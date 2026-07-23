@@ -1,9 +1,10 @@
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Events;
 
 [RequireComponent(typeof(NetworkObject))]
-public class NetworkButton : Interactable
+public class ButtonPress : Interactable
 {
     [Header("Button Visual")]
     [SerializeField] private Transform buttonVisual;
@@ -16,7 +17,7 @@ public class NetworkButton : Interactable
     [SerializeField] private bool resetOnRelease = true;
 
     [Header("Colors")]
-    [SerializeField] private Color normalColor = Color.red;
+    [SerializeField] private Color normalColor = Color.white;
     [SerializeField] private Color pressedColor = Color.green;
 
     [Header("Events")]
@@ -38,6 +39,17 @@ public class NetworkButton : Interactable
 
     private void Awake()
     {
+        cancelOnCanInteractFail = false;
+
+        if (handTarget == null)
+        {
+            var go = new GameObject("HandTarget");
+            go.transform.SetParent(transform);
+            go.transform.localPosition = Vector3.zero;
+            go.transform.localRotation = Quaternion.identity;
+            handTarget = go.transform;
+        }
+
         if (buttonVisual == null)
         {
             buttonVisual = transform;
@@ -65,7 +77,7 @@ public class NetworkButton : Interactable
         visualPressed = networkIsPressed.Value;
         ApplyVisualInstant();
 
-        Debug.Log($"🔘 NetworkButton spawned: {name}");
+        Debug.Log($"🔘 Button spawned: {name}");
     }
 
     public override void OnNetworkDespawn()
@@ -80,6 +92,20 @@ public class NetworkButton : Interactable
         UpdateVisual();
     }
 
+    public override void OnHandBegin(PlayerController player)
+    {
+        base.OnHandBegin(player);
+        StartCoroutine(AutoRelease(player));
+    }
+
+    protected virtual IEnumerator AutoRelease(PlayerController player)
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        if (player != null)
+            player.ReleaseCurrentInteractable();
+    }
+
     protected override void OnServerInteractionBegin(ulong clientId)
     {
         if (networkIsPressed.Value)
@@ -89,7 +115,7 @@ public class NetworkButton : Interactable
 
         onPressed?.Invoke();
 
-        Debug.Log($"✅ NetworkButton {name}: pressed by Client {clientId}");
+        Debug.Log($"✅ Button {name}: pressed by Client {clientId}");
     }
 
     protected override void OnServerInteractionEnd(ulong clientId)
@@ -104,7 +130,7 @@ public class NetworkButton : Interactable
 
         onReleased?.Invoke();
 
-        Debug.Log($"✅ NetworkButton {name}: released by Client {clientId}");
+        Debug.Log($"✅ Button {name}: released by Client {clientId}");
     }
 
     protected override void OnLocalInteractionBegin(PlayerController player)
@@ -126,7 +152,7 @@ public class NetworkButton : Interactable
     {
         visualPressed = newValue;
 
-        Debug.Log($"🔁 NetworkButton {name}: pressed state {oldValue} -> {newValue}");
+        Debug.Log($"🔁 Button {name}: pressed state {oldValue} -> {newValue}");
     }
 
     private void UpdateVisual()

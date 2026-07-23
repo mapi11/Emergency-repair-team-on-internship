@@ -87,4 +87,19 @@ public class CurrencyManager : NetworkBehaviour
     {
         networkCurrency.Value = Mathf.Max(0, networkCurrency.Value - amount);
     }
+
+    public void RequestForceSpendCurrency(int amount)
+    {
+        if (!IsSpawned) return;
+        if (IsServer)
+            networkCurrency.Value -= amount;
+        else
+            ForceSpendCurrencyServerRpc(amount);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ForceSpendCurrencyServerRpc(int amount)
+    {
+        networkCurrency.Value -= amount;
+    }
 }

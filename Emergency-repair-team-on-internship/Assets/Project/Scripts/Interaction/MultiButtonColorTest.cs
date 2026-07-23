@@ -5,7 +5,7 @@ using UnityEngine;
 public class MultiButtonColorTest : NetworkBehaviour
 {
     [Header("Buttons")]
-    [SerializeField] private NetworkButton[] buttons;
+    [SerializeField] private ButtonPress[] buttons;
 
     [Header("Cube Visual")]
     [SerializeField] private Renderer targetRenderer;
@@ -110,7 +110,7 @@ public class MultiButtonColorTest : NetworkBehaviour
 
         for (int i = 0; i < buttons.Length; i++)
         {
-            NetworkButton button = buttons[i];
+            ButtonPress button = buttons[i];
 
             if (button == null)
                 continue;

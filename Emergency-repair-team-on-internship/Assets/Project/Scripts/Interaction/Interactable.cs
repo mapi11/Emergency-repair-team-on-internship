@@ -6,8 +6,9 @@ public abstract class Interactable : NetworkBehaviour
     private const ulong NoClient = ulong.MaxValue;
 
     [Header("Interaction")]
-    [SerializeField] private Transform handTarget;
+    [SerializeField] protected Transform handTarget;
     [SerializeField] private bool canInteract = true;
+    [SerializeField] protected bool cancelOnCanInteractFail = true;
 
     [Header("Multiplayer Lock")]
     [SerializeField] private bool lockWhileInteracting = true;
@@ -25,6 +26,7 @@ public abstract class Interactable : NetworkBehaviour
     public Transform HandTarget => handTarget != null ? handTarget : transform;
 
     public bool IsBusy => currentUserClientId.Value != NoClient;
+    public bool CancelOnCanInteractFail => cancelOnCanInteractFail;
     public ulong CurrentUserClientId => currentUserClientId.Value;
 
     public bool IsUsedByLocalClient
@@ -113,6 +115,11 @@ public abstract class Interactable : NetworkBehaviour
     public void SetCanInteract(bool value)
     {
         canInteract = value;
+    }
+
+    public void SetCancelOnCanInteractFail(bool value)
+    {
+        cancelOnCanInteractFail = value;
     }
 
     [ServerRpc(RequireOwnership = false)]
