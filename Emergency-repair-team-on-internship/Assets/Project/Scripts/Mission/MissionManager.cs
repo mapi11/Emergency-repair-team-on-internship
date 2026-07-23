@@ -127,6 +127,8 @@ public class MissionManager : NetworkBehaviour
     {
         if (IsMissionActive) return;
         CancelCountdown();
+        NetworkConnectionManager.ConnectionLocked = true;
+        NetworkConnectionManager.IsLobbyLocked = true;
         NetworkConnectionManager.SnapshotPreMissionProfiles();
         IsMissionActive = true;
         StartTransitionClientRpc();

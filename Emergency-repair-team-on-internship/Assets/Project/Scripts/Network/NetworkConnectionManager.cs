@@ -73,6 +73,7 @@ public class NetworkConnectionManager : MonoBehaviour
 
     public int MaxPlayers { get; set; }
     public static bool IsLobbyLocked { get; set; }
+    public static bool ConnectionLocked { get; set; }
     public static int FixedPlayerCount { get; set; }
 
     private void Awake()
@@ -89,6 +90,7 @@ public class NetworkConnectionManager : MonoBehaviour
         MaxPlayers = maxPlayers;
 
         FindTransportIfNeeded();
+        RegisterNetworkCallbacks();
     }
 
     private void OnEnable()
@@ -385,8 +387,11 @@ public class NetworkConnectionManager : MonoBehaviour
     public static void SnapshotPreMissionProfiles()
     {
         PreMissionProfiles.Clear();
-        foreach (var profileId in clientProfiles.Values)
-            PreMissionProfiles.Add(profileId);
+        foreach (var kvp in clientProfiles)
+        {
+            if (!string.IsNullOrEmpty(kvp.Value))
+                PreMissionProfiles.Add(kvp.Value);
+        }
     }
 
     public static string GetConnectionPayloadId()
@@ -493,6 +498,10 @@ public class NetworkConnectionManager : MonoBehaviour
                 rpcParams
             );
         }
+
+        var startLobby = FindObjectOfType<StartLobbyController>();
+        if (startLobby != null && startLobby.IsMissionActive && serverInventory != null)
+            serverInventory.LockRoleSlots();
 
         pendingRoleItems.Remove(profileId);
     }
@@ -633,6 +642,38 @@ public class NetworkConnectionManager : MonoBehaviour
 
         clientProfiles[request.ClientNetworkId] = profileId;
 
+        Debug.Log($"ConnectionApproval: profileId='{profileId}' Locked={ConnectionLocked}|{IsLobbyLocked} MissionActive={(MissionManager.Instance != null ? MissionManager.Instance.IsMissionActive.ToString() : "N/A")} PreMissionProfiles=[{string.Join(",", PreMissionProfiles)}]");
+
+        if (ConnectionLocked || IsLobbyLocked || (MissionManager.Instance != null && MissionManager.Instance.IsMissionActive))
+        {
+            if (!PreMissionProfiles.Contains(profileId))
+            {
+                response.Approved = false;
+                response.Reason = "Pre-start phase already began.";
+                response.CreatePlayerObject = false;
+                return;
+            }
+
+            if (MissionManager.Instance != null && MissionManager.Instance.IsMissionActive)
+            {
+                response.Approved = true;
+                response.CreatePlayerObject = true;
+                return;
+            }
+
+            if (FixedPlayerCount > 0 && NetworkManager.Singleton.ConnectedClientsIds.Count >= FixedPlayerCount)
+            {
+                response.Approved = false;
+                response.Reason = "Pre-start phase already began.";
+                response.CreatePlayerObject = false;
+                return;
+            }
+
+            response.Approved = true;
+            response.CreatePlayerObject = true;
+            return;
+        }
+
         if (NetworkManager.Singleton.ConnectedClientsIds.Count >= MaxPlayers)
         {
             response.Approved = false;
@@ -641,15 +682,13 @@ public class NetworkConnectionManager : MonoBehaviour
             return;
         }
 
-        if (IsLobbyLocked || (MissionManager.Instance != null && MissionManager.Instance.IsMissionActive))
+        var preStartLobby = FindObjectOfType<PreStartLobbyController>();
+        if (preStartLobby != null && preStartLobby.IsCountdownActive && !IsLobbyLocked && NetworkManager.Singleton.ConnectedClientsIds.Count >= 2)
         {
-            if (!PreMissionProfiles.Contains(profileId))
-            {
-                response.Approved = false;
-                response.Reason = "Mission is already in progress.";
-                response.CreatePlayerObject = false;
-                return;
-            }
+            response.Approved = false;
+            response.Reason = "Pre-start phase already began.";
+            response.CreatePlayerObject = false;
+            return;
         }
 
         response.Approved = true;

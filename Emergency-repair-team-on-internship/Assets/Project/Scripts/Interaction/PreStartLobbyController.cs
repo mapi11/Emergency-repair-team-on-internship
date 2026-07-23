@@ -55,12 +55,25 @@ public class PreStartLobbyController : NetworkBehaviour
     public bool IsLockedIn => isLockedIn;
     public readonly NetworkVariable<bool> NetworkSpawnsDisabled = new();
 
+    public bool AllPlayersInZone =>
+        NetworkManager.Singleton != null &&
+        NetworkManager.Singleton.ConnectedClientsIds.Count > 0 &&
+        playersInside.Count >= NetworkManager.Singleton.ConnectedClientsIds.Count;
+
+    public bool IsCountdownActive => countdownCoroutine != null;
+
     public override void OnNetworkSpawn()
     {
         StoreClosedPositions();
 
         if (IsServer)
         {
+            if (NetworkConnectionManager.ConnectionLocked || NetworkConnectionManager.IsLobbyLocked)
+            {
+                NetworkSpawnsDisabled.Value = true;
+                isLockedIn = true;
+            }
+
             StartCoroutine(AnimateDoors(entranceDoors, entranceClosedPos, entranceDoorOffset, true, doorSpeed));
 
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
@@ -277,15 +290,15 @@ public class PreStartLobbyController : NetworkBehaviour
 
     private void OnTimerFinished()
     {
+        NetworkConnectionManager.ConnectionLocked = true;
+        NetworkConnectionManager.IsLobbyLocked = true;
+        NetworkConnectionManager.SnapshotPreMissionProfiles();
         isLockedIn = true;
         NetworkSpawnsDisabled.Value = true;
 
         if (defaultSpawnRoot != null)
             defaultSpawnRoot.SetActive(false);
-
-        NetworkConnectionManager.SnapshotPreMissionProfiles();
-        NetworkConnectionManager.IsLobbyLocked = true;
-        totalPlayerCount = playersInside.Count;
+        totalPlayerCount = NetworkManager.Singleton.ConnectedClientsIds.Count;
         NetworkConnectionManager.FixedPlayerCount = totalPlayerCount;
 
         SyncPlayerCountClientRpc(totalPlayerCount);
