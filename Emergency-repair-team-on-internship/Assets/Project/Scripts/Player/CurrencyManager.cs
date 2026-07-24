@@ -35,12 +35,11 @@ public class CurrencyManager : NetworkBehaviour
         instance = this;
     }
 
+    public static bool IsReady { get; private set; }
+
     public override void OnNetworkSpawn()
     {
         DontDestroyOnLoad(gameObject);
-
-        if (IsServer)
-            networkCurrency.Value = 1000;
 
         networkCurrency.OnValueChanged += OnCurrencyValueChanged;
     }
@@ -51,6 +50,43 @@ public class CurrencyManager : NetworkBehaviour
 
         if (instance == this)
             instance = null;
+    }
+
+    public void GrantStartingCurrency(int playerCount)
+    {
+        if (!IsServer) return;
+
+        int amount = playerCount switch
+        {
+            1 => 500,
+            2 => 750,
+            _ => 750
+        };
+
+        networkCurrency.Value = amount;
+        IsReady = true;
+        EnableCurrencyUIClientRpc();
+    }
+
+    public void EnableCurrencyUIForClient(ulong clientId)
+    {
+        if (!IsServer) return;
+        var rpcParams = new ClientRpcParams
+        {
+            Send = new ClientRpcSendParams
+            {
+                TargetClientIds = new ulong[] { clientId }
+            }
+        };
+        EnableCurrencyUIClientRpc(rpcParams);
+    }
+
+    [ClientRpc]
+    private void EnableCurrencyUIClientRpc(ClientRpcParams clientRpcParams = default)
+    {
+        IsReady = true;
+        if (CurrencyUI.Instance != null)
+            CurrencyUI.Instance.Initialize();
     }
 
     private void OnCurrencyValueChanged(int oldValue, int newValue)

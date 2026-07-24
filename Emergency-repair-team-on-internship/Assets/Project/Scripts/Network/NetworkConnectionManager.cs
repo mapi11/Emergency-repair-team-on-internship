@@ -173,10 +173,16 @@ public class NetworkConnectionManager : MonoBehaviour
         if (isBusy)
             return;
 
-        ShowConnectionScreen(playerColor);
-
         ApplyPlayerSettings(profileId, playerName, playerColor);
         ApplyLocalConnectionData();
+
+        if (!IsLocalPortOpen(port))
+        {
+            SetStatus("Local host not found");
+            return;
+        }
+
+        ShowConnectionScreen(playerColor);
 
         RegisterNetworkCallbacks();
         SetConnectionPayload();
@@ -572,6 +578,25 @@ public class NetworkConnectionManager : MonoBehaviour
         transport.SetConnectionData(address, port);
 
         Debug.Log($"🌐 Local connection data: {address}:{port}");
+    }
+
+    private static bool IsLocalPortOpen(ushort port)
+    {
+        try
+        {
+            var properties = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties();
+            var listeners = properties.GetActiveUdpListeners();
+            foreach (var listener in listeners)
+            {
+                if (listener.Port == port)
+                    return true;
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
     }
 
     private async Task EnsureUnityServicesAsync()

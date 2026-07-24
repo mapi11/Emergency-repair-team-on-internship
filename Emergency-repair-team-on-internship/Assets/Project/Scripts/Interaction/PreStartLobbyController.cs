@@ -305,6 +305,9 @@ public class PreStartLobbyController : NetworkBehaviour
         ApplyRoleItemLimits();
         ActivateInventoryClientRpc(totalPlayerCount);
 
+        if (CurrencyManager.Instance != null)
+            CurrencyManager.Instance.GrantStartingCurrency(totalPlayerCount);
+
         StartCoroutine(AnimateDoors(entranceDoors, entranceClosedPos, entranceDoorOffset, false, doorSpeed));
         StartCoroutine(AnimateDoors(exitDoors, exitClosedPos, exitDoorOffset, true, doorSpeed));
     }
@@ -364,6 +367,9 @@ public class PreStartLobbyController : NetworkBehaviour
             };
             SyncPlayerCountClientRpc(totalPlayerCount, rpcParams);
             ActivateInventoryClientRpc(totalPlayerCount, rpcParams);
+
+            if (CurrencyManager.Instance != null)
+                CurrencyManager.Instance.EnableCurrencyUIForClient(clientId);
 
             NetworkConnectionManager.RestorePlayerRoleItems(clientId);
 

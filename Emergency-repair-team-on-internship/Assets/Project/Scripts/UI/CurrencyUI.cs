@@ -8,31 +8,55 @@ public class CurrencyUI : MonoBehaviour
     [SerializeField] private TMP_Text currencyText;
     [SerializeField] private Button addButton;
     [SerializeField] private Button subtractButton;
+    [SerializeField] private GameObject container;
     [SerializeField] private int testAmount = 100;
 
+    public static CurrencyUI Instance { get; private set; }
+
     private CurrencyManager currencyManager;
+
+    private void Awake()
+    {
+        Instance = this;
+        container?.SetActive(false);
+    }
 
     private void Start()
     {
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsClient)
         {
-            gameObject.SetActive(false);
+            container?.SetActive(false);
             return;
         }
 
-        FindCurrencyManager();
-
-        if (addButton != null)
-            addButton.onClick.AddListener(OnAddClicked);
-
-        if (subtractButton != null)
-            subtractButton.onClick.AddListener(OnSubtractClicked);
+        if (CurrencyManager.IsReady)
+            Initialize();
     }
 
     private void OnDestroy()
     {
         if (currencyManager != null)
             currencyManager.OnCurrencyChanged -= OnCurrencyChanged;
+
+        if (Instance == this)
+            Instance = null;
+    }
+
+    public void Initialize()
+    {
+        if (container != null)
+            container.SetActive(true);
+
+        if (addButton != null)
+            addButton.onClick.AddListener(OnAddClicked);
+
+        if (subtractButton != null)
+            subtractButton.onClick.AddListener(OnSubtractClicked);
+
+        if (currencyManager != null)
+            return;
+
+        FindCurrencyManager();
     }
 
     private void FindCurrencyManager()
