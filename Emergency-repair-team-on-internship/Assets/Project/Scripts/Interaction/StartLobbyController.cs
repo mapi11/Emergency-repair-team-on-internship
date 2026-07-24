@@ -26,6 +26,10 @@ public class StartLobbyController : NetworkBehaviour
     [SerializeField] private float doorSpeed = 2f;
     [SerializeField] private float countdownDuration = 10f;
 
+    [Header("Button Start")]
+    [SerializeField] private bool startWithButtons;
+    [SerializeField] private ButtonLongPressed[] startButtons;
+
     [Header("Trigger Zone")]
     [SerializeField] private BoxCollider zoneTrigger;
 
@@ -107,10 +111,14 @@ public class StartLobbyController : NetworkBehaviour
         if (!IsServer) return;
 
         overlapCheckTimer -= Time.deltaTime;
-        if (overlapCheckTimer > 0) return;
-        overlapCheckTimer = 0.1f;
+        if (overlapCheckTimer <= 0)
+        {
+            overlapCheckTimer = 0.1f;
+            CheckOverlap();
+        }
 
-        CheckOverlap();
+        if (startWithButtons)
+            CheckButtonStart();
     }
 
     private void CheckOverlap()
@@ -140,7 +148,8 @@ public class StartLobbyController : NetworkBehaviour
             {
                 changed = true;
                 LockPlayerRoleSlots(id);
-                CheckStartConditions();
+                if (!startWithButtons)
+                    CheckStartConditions();
             }
         }
 
@@ -163,7 +172,9 @@ public class StartLobbyController : NetworkBehaviour
         }
 
         RefreshCounts();
-        CheckStartConditions();
+
+        if (!startWithButtons)
+            CheckStartConditions();
     }
 
     private void LockPlayerRoleSlots(ulong clientId)
@@ -204,6 +215,31 @@ public class StartLobbyController : NetworkBehaviour
                 return false;
         }
         return true;
+    }
+
+    private void CheckButtonStart()
+    {
+        if (countdownCoroutine != null) return;
+        if (NetworkMissionActive.Value) return;
+
+        int total = NetworkManager.Singleton.ConnectedClientsIds.Count;
+        if (total <= 0) return;
+
+        bool allInside = total > 0 && CountPlayersInZoneWithRoles() >= total;
+        bool hasPrimary = HasAtLeastOnePrimaryRole();
+        bool allRoles = AllPlayersHaveRoles();
+
+        if (!allInside || !hasPrimary || !allRoles) return;
+
+        int pressedCount = 0;
+        foreach (var button in startButtons)
+        {
+            if (button != null && button.IsPressed)
+                pressedCount++;
+        }
+
+        if (pressedCount >= total)
+            StartMission();
     }
 
     private void CheckStartConditions()

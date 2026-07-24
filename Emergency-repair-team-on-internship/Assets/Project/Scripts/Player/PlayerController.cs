@@ -422,7 +422,7 @@ public class PlayerController : MonoBehaviour
             currentInteractable = FindBestInteractable();
             handReachedInteractable = false;
 
-            if (currentInteractable != null && IsInventoryFull())
+            if (currentInteractable != null && IsInventoryFull() && currentInteractable is PickableItem)
                 currentInteractable = null;
 
             Hand hand = InteractionHandRef;

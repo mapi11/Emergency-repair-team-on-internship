@@ -11,10 +11,10 @@ public class ButtonPress : Interactable
     [SerializeField] private Renderer buttonRenderer;
 
     [SerializeField] private Vector3 normalLocalPosition = Vector3.zero;
-    [SerializeField] private Vector3 pressedLocalPosition = new Vector3(0f, -0.06f, 0f);
+    [SerializeField] private Vector3 pressedLocalPosition = new Vector3(0f, 0.01f, 0f);
 
     [Header("Press")]
-    [SerializeField] private bool resetOnRelease = true;
+    [SerializeField] protected bool resetOnRelease = true;
 
     [Header("Colors")]
     [SerializeField] private Color normalColor = Color.white;
@@ -27,9 +27,9 @@ public class ButtonPress : Interactable
     public bool IsPressed => networkIsPressed.Value;
 
     [Header("Debug")]
-    [SerializeField] private bool visualPressed;
+    [SerializeField] protected bool visualPressed;
 
-    private readonly NetworkVariable<bool> networkIsPressed = new(
+    protected readonly NetworkVariable<bool> networkIsPressed = new(
         false,
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server

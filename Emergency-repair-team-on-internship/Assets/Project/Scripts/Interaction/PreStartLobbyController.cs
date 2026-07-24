@@ -40,6 +40,10 @@ public class PreStartLobbyController : NetworkBehaviour
     [Header("Timer")]
     [SerializeField] private float countdownDuration = 10f;
 
+    [Header("Button Start")]
+    [SerializeField] private bool startWithButtons;
+    [SerializeField] private ButtonLongPressed[] startButtons;
+
     private Vector3[] entranceClosedPos;
     private Vector3[] exitClosedPos;
     private readonly HashSet<ulong> playersInside = new();
@@ -103,10 +107,14 @@ public class PreStartLobbyController : NetworkBehaviour
         if (!IsServer) return;
 
         overlapCheckTimer -= Time.deltaTime;
-        if (overlapCheckTimer > 0) return;
-        overlapCheckTimer = 0.1f;
+        if (overlapCheckTimer <= 0)
+        {
+            overlapCheckTimer = 0.1f;
+            CheckOverlap();
+        }
 
-        CheckOverlap();
+        if (startWithButtons)
+            CheckButtonStart();
     }
 
     private void CheckOverlap()
@@ -135,7 +143,8 @@ public class PreStartLobbyController : NetworkBehaviour
             if (playersInside.Add(id))
             {
                 changed = true;
-                CheckCountdown();
+                if (!startWithButtons)
+                    CheckCountdown();
             }
         }
 
@@ -239,6 +248,22 @@ public class PreStartLobbyController : NetworkBehaviour
     {
         networkPlayersInside.Value = playersInside.Count;
         networkTotalPlayers.Value = NetworkManager.Singleton.ConnectedClientsIds.Count;
+    }
+
+    private void CheckButtonStart()
+    {
+        if (isLockedIn) return;
+
+        int pressedCount = 0;
+        foreach (var button in startButtons)
+        {
+            if (button != null && button.IsPressed)
+                pressedCount++;
+        }
+
+        int total = NetworkManager.Singleton.ConnectedClientsIds.Count;
+        if (total > 0 && pressedCount >= total)
+            OnTimerFinished();
     }
 
     private void CheckCountdown()
@@ -391,7 +416,8 @@ public class PreStartLobbyController : NetworkBehaviour
             return;
         }
         RefreshCounts();
-        CheckCountdown();
+        if (!startWithButtons)
+            CheckCountdown();
     }
 
     [ClientRpc]
